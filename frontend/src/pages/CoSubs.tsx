@@ -1,24 +1,21 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { SUBSCRIPTION_GROUPS } from '../data/mock';
 import { Plus, Users, Music, Tv, BookOpen, FileText, PenTool, Key } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { getSubscriptionGroups, type SubscriptionGroup } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 const iconMap: Record<string, any> = {
   Music, Tv, BookOpen, FileText, PenTool
 };
 
 export default function CoSubs() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate API fetch delay
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+  const { data: groups = [], isLoading: loading, isError, refetch } = useApiQuery<SubscriptionGroup[]>({
+    queryKey: ['subscription-groups'],
+    queryFn: getSubscriptionGroups,
+    errorMessage: 'Could not load subscription groups.',
+  });
 
   return (
     <motion.div
@@ -38,11 +35,21 @@ export default function CoSubs() {
         </Link>
       </div>
 
+      {isError && (
+        <QueryErrorState
+          title="Co-Subscription listings are unavailable"
+          message="We could not load group listings right now."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-body">
         {loading ? (
           // Skeleton Loaders
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 flex flex-col animate-pulse h-[320px]">
+            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 flex flex-col animate-pulse h-80">
               <div className="flex items-start justify-between mb-6">
                 <div className="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
                 <div className="text-right">
@@ -69,7 +76,7 @@ export default function CoSubs() {
           ))
         ) : (
           // Actual Content
-          SUBSCRIPTION_GROUPS.map((group, index) => {
+          groups.map((group, index) => {
             const Icon = iconMap[group.icon] || Users;
             const isSublet = group.type === 'sublet';
             const spotsLeft = isSublet ? (group.filledSpots === 0 ? 1 : 0) : (group.totalSpots - group.filledSpots);

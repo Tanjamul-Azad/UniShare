@@ -1,14 +1,39 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { SUBSCRIPTION_GROUPS } from '../data/mock';
 import { Users, ArrowLeft, ShieldCheck, Info, Music, Tv, BookOpen, FileText, PenTool, Calendar, Share2, Key } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { getSubscriptionGroupById, type SubscriptionGroup } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 const iconMap: Record<string, any> = { Music, Tv, BookOpen, FileText, PenTool };
 
 export default function GroupDetail() {
   const { id } = useParams();
-  const group = SUBSCRIPTION_GROUPS.find(g => g.id === id);
+  const { data: group, isLoading: loading, isError, refetch } = useApiQuery<SubscriptionGroup | undefined>({
+    queryKey: ['subscription-group', id],
+    queryFn: () => (id ? getSubscriptionGroupById(id) : Promise.resolve(undefined)),
+    enabled: Boolean(id),
+    errorMessage: 'Could not load subscription group details.',
+  });
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <QueryErrorState
+          title="Group details are unavailable"
+          message="We could not load this subscription group right now."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500 dark:text-gray-400">Loading group details...</div>;
+  }
 
   if (!group) {
     return <div className="text-center py-20 text-gray-500 dark:text-gray-400">Group not found</div>;
@@ -27,7 +52,7 @@ export default function GroupDetail() {
       className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8"
     >
       <Link to="/co-subs" className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Co-Subs
+        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Co-Subscriptions
       </Link>
 
       <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">

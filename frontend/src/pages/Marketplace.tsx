@@ -1,16 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { MARKETPLACE_ITEMS } from '../data/mock';
 import { Filter, Plus, Search, X, Heart } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useFavorites } from '../context/FavoritesContext';
+import { getMarketplaceItems, type MarketplaceItem } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 export default function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { data: items = [], isLoading: loading, isError, refetch } = useApiQuery<MarketplaceItem[]>({
+    queryKey: ['marketplace-items'],
+    queryFn: getMarketplaceItems,
+    errorMessage: 'Could not load marketplace items.',
+  });
   
   const handleToggleFavorite = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -44,16 +50,8 @@ export default function Marketplace() {
   const conditions = ['All', 'New', 'Like New', 'Good', 'Fair'];
   const types = ['All', 'Sell', 'Share', 'Barter'];
 
-  useEffect(() => {
-    // Simulate API fetch delay
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
-
   const filteredItems = useMemo(() => {
-    return MARKETPLACE_ITEMS.filter((item) => {
+    return items.filter((item) => {
       // Search filter
       const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -72,7 +70,7 @@ export default function Marketplace() {
 
       return matchesSearch && matchesCategory && matchesCondition && matchesType && matchesPrice;
     });
-  }, [searchQuery, selectedCategory, selectedCondition, selectedType, priceRange]);
+  }, [items, searchQuery, selectedCategory, selectedCondition, selectedType, priceRange]);
 
   const resetFilters = () => {
     setSelectedCategory('All');
@@ -117,6 +115,16 @@ export default function Marketplace() {
           </Link>
         </div>
       </div>
+
+      {isError && (
+        <QueryErrorState
+          title="Marketplace is unavailable"
+          message="We could not load marketplace items right now."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      )}
 
       {/* Search and Filters Area */}
       <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 font-body">
@@ -243,7 +251,7 @@ export default function Marketplace() {
           // Skeleton Loaders
           Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex flex-col h-full animate-pulse">
-              <div className="aspect-[4/5] rounded-2xl bg-gray-200 dark:bg-gray-800 mb-4 w-full"></div>
+              <div className="aspect-4/5 rounded-2xl bg-gray-200 dark:bg-gray-800 mb-4 w-full"></div>
               <div className="space-y-2 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
@@ -264,7 +272,7 @@ export default function Marketplace() {
               transition={{ duration: 0.4, delay: index * 0.05 }}
             >
               <Link to={`/marketplace/${item.id}`} className="group cursor-pointer flex flex-col h-full">
-                <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-4 relative border border-gray-200/50 dark:border-gray-700/50">
+                <div className="aspect-4/5 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-4 relative border border-gray-200/50 dark:border-gray-700/50">
                   <img
                     src={item.image}
                     alt={item.title}

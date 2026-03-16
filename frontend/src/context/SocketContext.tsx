@@ -28,7 +28,9 @@ interface SocketContextType {
   sendMessage: (receiverId: string, content: string) => void;
   sendNotification: (recipientId: string, type: string, title: string, message: string) => void;
   markNotificationRead: (id: string) => void;
+  markThreadRead: (participantId: string) => void;
   unreadNotificationsCount: number;
+  unreadThreadCount: number;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadThreadIds, setUnreadThreadIds] = useState<string[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -46,6 +49,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         socket.disconnect();
         setSocket(null);
       }
+      setUnreadThreadIds([]);
       return;
     }
 
@@ -55,10 +59,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     newSocket.on('init', (data: { messages: Message[], notifications: Notification[] }) => {
       setMessages(data.messages);
       setNotifications(data.notifications);
+      setUnreadThreadIds([]);
     });
 
     newSocket.on('receive_message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
+      if (msg.receiverId === user.id) {
+        setUnreadThreadIds((prev) => (prev.includes(msg.senderId) ? prev : [...prev, msg.senderId]));
+      }
     });
 
     newSocket.on('receive_notification', (notif: Notification) => {
@@ -102,9 +110,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const markThreadRead = (participantId: string) => {
+    setUnreadThreadIds((prev) => prev.filter((id) => id !== participantId));
+  };
+
   // Filter notifications for current user
   const userNotifications = notifications.filter(n => n.recipientId === user?.id);
   const unreadNotificationsCount = userNotifications.filter(n => !n.read).length;
+  const unreadThreadCount = unreadThreadIds.length;
 
   return (
     <SocketContext.Provider value={{ 
@@ -114,7 +127,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       sendMessage, 
       sendNotification, 
       markNotificationRead,
-      unreadNotificationsCount
+      markThreadRead,
+      unreadNotificationsCount,
+      unreadThreadCount,
     }}>
       {children}
     </SocketContext.Provider>

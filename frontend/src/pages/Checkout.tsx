@@ -19,19 +19,20 @@ export default function Checkout() {
     }
 
     // Mock successful payment
-    navigate('/profile');
+    const orderId = `UNI-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    navigate(`/order-success?orderId=${orderId}`);
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-semibold text-gray-900">Secure Checkout</h1>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="text-center mb-8 sm:mb-10">
+        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight">Secure Checkout</h1>
         <p className="text-gray-500 mt-2 flex items-center justify-center gap-2">
           <Lock className="w-4 h-4" /> Payments are encrypted and secure
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
+      <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-8 shadow-sm">
         <form onSubmit={handlePay} className="space-y-8">
           {/* Payment Method */}
           <div>
@@ -51,7 +52,7 @@ export default function Checkout() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
               <input type="text" required placeholder="0000 0000 0000 0000" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none font-mono" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
                 <input type="text" required placeholder="MM/YY" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none font-mono" />
@@ -63,7 +64,7 @@ export default function Checkout() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
-              <input type="text" required placeholder="Jane Doe" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none" />
+              <input type="text" required placeholder="Cardholder name" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none" />
             </div>
           </div>
 

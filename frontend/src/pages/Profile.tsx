@@ -1,16 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { User, Package, ShoppingBag, Users, LogOut, Settings, Camera, Calendar, Heart } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
-import { MARKETPLACE_ITEMS, SUBSCRIPTION_GROUPS } from '../data/mock';
+import { getMarketplaceItems, getSubscriptionGroups, type MarketplaceItem, type SubscriptionGroup } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout, updateUser } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
-  const [activeTab, setActiveTab] = useState('profile');
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const {
+    data: marketplaceItems = [],
+    isError: isListingsError,
+    refetch: refetchListings,
+  } = useApiQuery<MarketplaceItem[]>({
+    queryKey: ['marketplace-items'],
+    queryFn: getMarketplaceItems,
+    errorMessage: 'Could not load your listings.',
+  });
+  const {
+    data: subscriptionGroups = [],
+    isError: isGroupsError,
+    refetch: refetchGroups,
+  } = useApiQuery<SubscriptionGroup[]>({
+    queryKey: ['subscription-groups'],
+    queryFn: getSubscriptionGroups,
+    errorMessage: 'Could not load your groups.',
+  });
   
   // Profile edit state
   const [editName, setEditName] = useState(user?.name || '');
@@ -19,6 +41,16 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  useEffect(() => {
+    const nextTab = searchParams.get('tab') || 'profile';
+    setActiveTab(nextTab);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
   };
 
   const handleSaveProfile = () => {
@@ -37,10 +69,10 @@ export default function Profile() {
     }
   };
 
-  // Mock data filtering based on user name (in a real app, use user ID)
-  const myListings = MARKETPLACE_ITEMS.filter(item => item.seller === user?.name || item.seller === 'Jane Doe');
-  const myGroups = SUBSCRIPTION_GROUPS.filter(group => group.owner === user?.name || group.owner === 'Jane Doe');
-  const savedItems = MARKETPLACE_ITEMS.filter(item => favorites.has(item.id));
+  // Temporary client-side filtering by name; backend user IDs will replace this.
+  const myListings = marketplaceItems.filter(item => item.seller === user?.name);
+  const myGroups = subscriptionGroups.filter(group => group.owner === user?.name);
+  const savedItems = marketplaceItems.filter(item => favorites.has(item.id));
 
   return (
     <motion.div
@@ -73,8 +105,8 @@ export default function Profile() {
               className="hidden" 
             />
           </div>
-          <h2 className="font-semibold text-gray-900 text-lg">{user?.name || 'Student'}</h2>
-          <p className="text-sm text-gray-500 mb-3">{user?.email || 'student@university.edu'}</p>
+          <h2 className="font-semibold text-gray-900 text-lg">{user?.name || 'Member'}</h2>
+          <p className="text-sm text-gray-500 mb-3">{user?.email || 'you@example.com'}</p>
           
           {user?.joinedDate && (
             <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 bg-gray-50 py-1.5 rounded-full">
@@ -85,13 +117,13 @@ export default function Profile() {
         </div>
         
         <nav className="space-y-1">
-          <button onClick={() => setActiveTab('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => handleTabChange('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <Settings className="w-4 h-4" /> Profile Settings
           </button>
-          <button onClick={() => setActiveTab('orders')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => handleTabChange('orders')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <ShoppingBag className="w-4 h-4" /> My Orders
           </button>
-          <button onClick={() => setActiveTab('listings')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'listings' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => handleTabChange('listings')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'listings' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <div className="flex items-center gap-3">
               <Package className="w-4 h-4" /> My Listings
             </div>
@@ -101,7 +133,7 @@ export default function Profile() {
               </span>
             )}
           </button>
-          <button onClick={() => setActiveTab('groups')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'groups' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => handleTabChange('groups')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'groups' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <div className="flex items-center gap-3">
               <Users className="w-4 h-4" /> My Groups
             </div>
@@ -111,7 +143,7 @@ export default function Profile() {
               </span>
             )}
           </button>
-          <button onClick={() => setActiveTab('saved')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'saved' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          <button onClick={() => handleTabChange('saved')} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'saved' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
             <div className="flex items-center gap-3">
               <Heart className="w-4 h-4" /> Saved Items
             </div>
@@ -124,6 +156,19 @@ export default function Profile() {
 
       {/* Content */}
       <div className="flex-1 bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
+        {(isListingsError || isGroupsError) && (
+          <div className="mb-6">
+            <QueryErrorState
+              title="Profile data is partially unavailable"
+              message="Some profile sections could not be loaded."
+              onRetry={() => {
+                void refetchListings();
+                void refetchGroups();
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === 'profile' && (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-900">Profile Settings</h3>
@@ -138,14 +183,14 @@ export default function Profile() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">University Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <input 
                   type="email" 
                   value={user?.email || ''} 
                   disabled 
                   className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-500 rounded-xl outline-none" 
                 />
-                <p className="text-xs text-gray-500 mt-1.5">Your university email cannot be changed.</p>
+                <p className="text-xs text-gray-500 mt-1.5">Your account email cannot be changed right now.</p>
               </div>
             </div>
             <button 
@@ -204,7 +249,7 @@ export default function Profile() {
               <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
                 <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <h4 className="text-gray-900 font-medium mb-1">You haven't listed any items yet</h4>
-                <p className="text-gray-500 text-sm mb-4">Got textbooks or stationary you don't need? Sell them here.</p>
+                <p className="text-gray-500 text-sm mb-4">Got textbooks or stationery you no longer need? List them here.</p>
                 <Link to="/marketplace/new" className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">
                   List Your First Item
                 </Link>

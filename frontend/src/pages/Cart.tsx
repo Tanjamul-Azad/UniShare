@@ -1,21 +1,41 @@
 import { motion } from 'motion/react';
 import { Trash2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MARKETPLACE_ITEMS } from '../data/mock';
+import { getCartPreviewItems, type MarketplaceItem } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 export default function Cart() {
-  // Mock cart items
-  const cartItems = [MARKETPLACE_ITEMS[0], MARKETPLACE_ITEMS[1]];
+  const { data: cartItems = [], isError, refetch } = useApiQuery<MarketplaceItem[]>({
+    queryKey: ['cart-preview-items'],
+    queryFn: getCartPreviewItems,
+    errorMessage: 'Could not load cart items.',
+  });
+
+  if (isError) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <QueryErrorState
+          title="Cart is unavailable"
+          message="We could not load your cart right now."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto py-8">
-      <h1 className="text-3xl font-semibold text-gray-900 mb-8">Your Cart</h1>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900 mb-8">Your Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map((item) => (
-            <div key={item.id} className="flex gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+            <div key={item.id} className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
               <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                 <img src={item.image} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>

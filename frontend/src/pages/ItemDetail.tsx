@@ -1,25 +1,35 @@
-import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MARKETPLACE_ITEMS } from '../data/mock';
 import { Star, ShieldCheck, ShoppingCart, ArrowLeft, MessageSquare, Tag, RefreshCw, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useFavorites } from '../context/FavoritesContext';
+import { getMarketplaceItemById, type MarketplaceItem } from '../lib/api';
+import { useApiQuery } from '../hooks/useApiQuery';
+import QueryErrorState from '../components/QueryErrorState';
 
 export default function ItemDetail() {
   const { id } = useParams();
-  const [loading, setLoading] = useState(true);
   const { isFavorite, toggleFavorite } = useFavorites();
-  
-  useEffect(() => {
-    // Simulate API fetch delay
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [id]);
+  const { data: item, isLoading: loading, isError, refetch } = useApiQuery<MarketplaceItem | undefined>({
+    queryKey: ['marketplace-item', id],
+    queryFn: () => (id ? getMarketplaceItemById(id) : Promise.resolve(undefined)),
+    enabled: Boolean(id),
+    errorMessage: 'Could not load item details.',
+  });
 
-  const item = MARKETPLACE_ITEMS.find(i => i.id === id);
+  if (isError) {
+    return (
+      <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <QueryErrorState
+          title="Item details are unavailable"
+          message="We could not load this item right now."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   if (!loading && !item) {
     return <div className="text-center py-20 text-gray-500 dark:text-gray-400">Item not found</div>;
@@ -40,9 +50,9 @@ export default function ItemDetail() {
         {/* Image Gallery */}
         <div className="space-y-4">
           {loading ? (
-            <div className="aspect-[4/5] rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
+            <div className="aspect-4/5 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
           ) : (
-            <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 relative group">
+            <div className="aspect-4/5 rounded-3xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 relative group">
               <img 
                 src={item?.image} 
                 alt={item?.title} 
@@ -197,7 +207,7 @@ export default function ItemDetail() {
               
               <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 flex items-center justify-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" /> 
-                {item?.type === 'sell' ? 'Secure payment via Stripe. Funds held until delivery.' : 'Protected by SkillEx Trust & Safety guidelines.'}
+                {item?.type === 'sell' ? 'Secure payment via Stripe. Funds held until delivery.' : 'Protected by UniShare Trust & Safety guidelines.'}
               </p>
             </>
           )}

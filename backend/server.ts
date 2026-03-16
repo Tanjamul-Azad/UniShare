@@ -2,7 +2,30 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import net from 'net';
 import path from 'path';
+
+async function findAvailablePort(startPort: number, maxTries = 20): Promise<number> {
+  for (let offset = 0; offset < maxTries; offset++) {
+    const candidate = startPort + offset;
+
+    // Probe the port by opening a temporary TCP server.
+    const isAvailable = await new Promise<boolean>((resolve) => {
+      const tester = net.createServer();
+      tester.once('error', () => resolve(false));
+      tester.once('listening', () => {
+        tester.close(() => resolve(true));
+      });
+      tester.listen(candidate, '0.0.0.0');
+    });
+
+    if (isAvailable) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`No free port found starting from ${startPort}.`);
+}
 
 async function startServer() {
   const app = express();
@@ -14,7 +37,8 @@ async function startServer() {
     },
   });
 
-  const PORT = 3000;
+  const requestedPort = Number(process.env.PORT ?? '3000');
+  const PORT = await findAvailablePort(requestedPort);
 
   // Simple in-memory storage for chat and notifications
   const messages: any[] = [];
@@ -82,8 +106,14 @@ async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       root: path.join(process.cwd(), 'frontend'),
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer,
+        },
+      },
       appType: 'spa',
+      configFile: path.join(process.cwd(), 'frontend', 'vite.config.ts'),
     });
     app.use(vite.middlewares);
   } else {
@@ -95,6 +125,9 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, '0.0.0.0', () => {
+    if (PORT !== requestedPort) {
+      console.log(`Port ${requestedPort} was busy, using ${PORT} instead.`);
+    }
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

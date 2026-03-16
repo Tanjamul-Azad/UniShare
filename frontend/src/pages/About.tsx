@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { BookOpen, Users, ShieldCheck, Globe } from 'lucide-react';
+import { ShieldCheck, Globe } from 'lucide-react';
 
 export default function About() {
   return (
@@ -7,12 +7,12 @@ export default function About() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="max-w-4xl mx-auto space-y-16 py-8 font-body"
+      className="max-w-4xl mx-auto px-4 sm:px-6 space-y-12 sm:space-y-16 py-10 sm:py-14 font-body"
     >
       <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white tracking-tight font-display">About SkillEx</h1>
-        <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-light">
-          We believe education should be accessible and affordable. SkillEx connects students globally to share resources, reduce waste, and build community.
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white tracking-tight font-display">About UniShare</h1>
+        <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-light">
+          We believe education should be accessible and affordable. UniShare connects students globally to share resources, reduce waste, and build community.
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export default function About() {
           </div>
           <h3 className="text-2xl font-semibold text-gray-900 dark:text-white font-display">Global Reach, Local Impact</h3>
           <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-            Whether you're looking for a specific textbook in your local campus or wanting to share a digital subscription with peers across the globe, SkillEx breaks down the barriers.
+            Whether you're looking for a specific textbook in your local campus or wanting to share a digital subscription with peers across the globe, UniShare breaks down the barriers.
           </p>
         </div>
         <div className="space-y-4">

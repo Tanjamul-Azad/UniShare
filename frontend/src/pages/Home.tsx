@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, MapPin, ArrowRight, Book, Users, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const IMAGES = [
   'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop', // Students studying
@@ -11,6 +11,7 @@ const IMAGES = [
 
 export default function Home() {
   const [currentImage, setCurrentImage] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -74,9 +75,9 @@ export default function Home() {
               const formData = new FormData(e.currentTarget);
               const query = formData.get('q');
               if (query) {
-                window.location.href = `/marketplace?q=${encodeURIComponent(query.toString())}`;
+                navigate(`/marketplace?q=${encodeURIComponent(query.toString())}`);
               } else {
-                window.location.href = '/marketplace';
+                navigate('/marketplace');
               }
             }}
             initial={{ opacity: 0, y: 20 }}
@@ -89,7 +90,7 @@ export default function Home() {
               <input
                 type="text"
                 name="q"
-                placeholder="What are you looking for?"
+                placeholder="Search books, tools, and study gear"
                 className="bg-transparent border-none outline-none text-white placeholder:text-white/60 w-full text-base"
               />
             </div>
@@ -97,7 +98,7 @@ export default function Home() {
               <MapPin className="w-5 h-5 text-white/70 mr-3" />
               <input
                 type="text"
-                placeholder="University or City"
+                placeholder="Campus or city"
                 className="bg-transparent border-none outline-none text-white placeholder:text-white/60 w-full text-base"
               />
             </div>
@@ -122,7 +123,7 @@ export default function Home() {
           {[
             { title: 'Textbooks', icon: Book, desc: 'Buy and sell used course materials.', link: '/marketplace' },
             { title: 'Stationary', icon: Sparkles, desc: 'Calculators, notebooks, and tools.', link: '/marketplace' },
-            { title: 'Co-Subscriptions', icon: Users, desc: 'Share costs for digital services.', link: '/co-subs' },
+            { title: 'Co-Subscriptions', icon: Users, desc: 'Share subscription costs with trusted peers.', link: '/co-subs' },
           ].map((cat, i) => (
             <motion.div
               key={cat.title}

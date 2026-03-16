@@ -1,14 +1,19 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, ShoppingBag, Users, Search, Bell, User, Github, Twitter, Linkedin, ShoppingCart } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { BookOpen, Search, Github, Twitter, Linkedin, ShoppingCart, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import NotificationsDropdown from './NotificationsDropdown';
+import ProfileMenu from './ProfileMenu';
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
+  const { unreadThreadCount } = useSocket();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,7 +26,7 @@ export default function Layout() {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/marketplace', label: 'Marketplace' },
-    { path: '/co-subs', label: 'Co-Subs' },
+    { path: '/co-subs', label: 'Co-Subscriptions' },
     { path: '/how-it-works', label: 'How it Works' },
     { path: '/about', label: 'About' },
   ];
@@ -33,8 +38,8 @@ export default function Layout() {
         className={cn(
           "fixed top-0 w-full z-50 transition-all duration-300 border-b",
           scrolled 
-            ? "bg-white/70 backdrop-blur-xl border-gray-200/50 shadow-sm py-3" 
-            : "bg-white/40 backdrop-blur-md border-transparent py-4"
+            ? "bg-white border-gray-200 shadow-sm py-3" 
+            : "bg-white border-transparent py-4"
         )}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -74,7 +79,7 @@ export default function Layout() {
                 const formData = new FormData(e.currentTarget);
                 const query = formData.get('q');
                 if (query) {
-                  window.location.href = `/marketplace?q=${encodeURIComponent(query.toString())}`;
+                  navigate(`/marketplace?q=${encodeURIComponent(query.toString())}`);
                 }
               }}
               className="relative hidden lg:block"
@@ -90,14 +95,20 @@ export default function Layout() {
             
             {user ? (
               <>
+                <Link to="/inbox" className="p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors relative">
+                  <MessageSquare className="w-5 h-5" />
+                  {unreadThreadCount > 0 ? (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-indigo-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                      {unreadThreadCount > 9 ? '9+' : unreadThreadCount}
+                    </span>
+                  ) : null}
+                </Link>
                 <NotificationsDropdown />
                 <Link to="/cart" className="p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors relative">
                   <ShoppingCart className="w-5 h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                 </Link>
-                <Link to="/profile" className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
-                  <User className="w-4 h-4" />
-                </Link>
+                <ProfileMenu />
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -115,8 +126,18 @@ export default function Layout() {
 
       {/* Main Content - Add top padding to account for fixed header */}
       <main className="flex-1 w-full pt-24 pb-10 flex flex-col">
-        <div className={cn("w-full mx-auto", location.pathname === '/' ? "max-w-full px-0" : "max-w-7xl px-6")}>
-          <Outlet />
+        <div className={cn("w-full mx-auto", location.pathname === '/' ? "max-w-full px-0" : "max-w-7xl px-4 sm:px-6")}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 1, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 1, y: -2 }}
+              transition={{ duration: 0.12, ease: 'easeOut' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 

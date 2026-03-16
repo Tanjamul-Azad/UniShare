@@ -21,7 +21,7 @@ export default function Reviews({ targetId, targetType }: ReviewsProps) {
       id: Math.random().toString(36).substring(7),
       targetId,
       targetType,
-      author: 'Current User', // Mock user
+      author: 'You',
       authorId: 'user_current',
       rating,
       comment: newReview,

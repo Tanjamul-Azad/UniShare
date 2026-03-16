@@ -1,18 +1,72 @@
 import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { Upload, ArrowLeft, BookOpen, PenTool, Monitor, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { createMarketplaceListing } from '../lib/api';
+import { emitToast } from '../lib/toastBus';
+import { newListingSchema } from '../lib/validation';
+
+type ListingFieldErrors = Partial<
+  Record<'title' | 'condition' | 'description' | 'price' | 'exchangeFor', string>
+>;
 
 export default function NewListing() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [listingType, setListingType] = useState<'sell' | 'share' | 'barter'>('sell');
   const [category, setCategory] = useState('Books');
+  const [fieldErrors, setFieldErrors] = useState<ListingFieldErrors>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const createListingMutation = useMutation({
+    mutationFn: createMarketplaceListing,
+    onSuccess: async (item) => {
+      await queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      await queryClient.invalidateQueries({ queryKey: ['seller-profile', 'u-current'] });
+      emitToast('Listing published successfully.', 'success');
+      navigate(`/marketplace/${item.id}`);
+    },
+    onError: () => {
+      emitToast('Unable to publish listing. Please try again.', 'error');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Mock API call
-    navigate('/marketplace');
+
+    const formData = new FormData(e.currentTarget);
+    const title = String(formData.get('title') || '').trim();
+    const condition = String(formData.get('condition') || '').trim();
+    const description = String(formData.get('description') || '').trim();
+    const priceRaw = String(formData.get('price') || '0');
+    const exchangeFor = String(formData.get('exchangeFor') || '').trim();
+
+    const parsed = newListingSchema.safeParse({
+      title,
+      category,
+      listingType,
+      condition,
+      description,
+      price: Number(priceRaw),
+      exchangeFor,
+    });
+
+    if (!parsed.success) {
+      const nextErrors: ListingFieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0];
+        if (typeof key === 'string' && !(key in nextErrors)) {
+          nextErrors[key as keyof ListingFieldErrors] = issue.message;
+        }
+      }
+      setFieldErrors(nextErrors);
+      emitToast('Please fix the highlighted fields.', 'error');
+      return;
+    }
+
+    setFieldErrors({});
+    createListingMutation.mutate(parsed.data);
   };
 
   return (
@@ -83,37 +137,42 @@ export default function NewListing() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Title</label>
-            <input type="text" required placeholder="e.g. Introduction to Algorithms, 3rd Edition" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+            <input name="title" type="text" required placeholder="e.g. Introduction to Algorithms, 3rd Edition" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+            {fieldErrors.title && <p className="mt-1 text-xs text-rose-600">{fieldErrors.title}</p>}
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {listingType === 'sell' && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Price ($)</label>
-                <input type="number" required min="0" step="0.01" placeholder="0.00" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+                <input name="price" type="number" required min="0" step="0.01" placeholder="0.00" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+                {fieldErrors.price && <p className="mt-1 text-xs text-rose-600">{fieldErrors.price}</p>}
               </motion.div>
             )}
             {listingType === 'barter' && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="sm:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">What are you looking for in exchange?</label>
-                <input type="text" required placeholder="e.g. A good condition calculus textbook" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+                <input name="exchangeFor" type="text" required placeholder="e.g. A good condition calculus textbook" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
+                {fieldErrors.exchangeFor && <p className="mt-1 text-xs text-rose-600">{fieldErrors.exchangeFor}</p>}
               </motion.div>
             )}
             <div className={cn(listingType !== 'sell' && listingType !== 'barter' ? "sm:col-span-2" : "")}>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Condition</label>
-              <select className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all appearance-none">
-                <option value="new">New</option>
-                <option value="like-new">Like New</option>
-                <option value="good">Good</option>
-                <option value="fair">Fair</option>
-                <option value="poor">Poor</option>
+              <select name="condition" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all appearance-none">
+                <option value="New">New</option>
+                <option value="Like New">Like New</option>
+                <option value="Good">Good</option>
+                <option value="Fair">Fair</option>
+                <option value="Poor">Poor</option>
               </select>
+              {fieldErrors.condition && <p className="mt-1 text-xs text-rose-600">{fieldErrors.condition}</p>}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
-            <textarea required rows={4} placeholder="Describe the item's condition, edition, any highlights or markings..." className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-gray-900 dark:text-white transition-all"></textarea>
+            <textarea name="description" required rows={4} placeholder="Describe the item's condition, edition, any highlights or markings..." className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-gray-900 dark:text-white transition-all"></textarea>
+            {fieldErrors.description && <p className="mt-1 text-xs text-rose-600">{fieldErrors.description}</p>}
           </div>
 
           <div>
@@ -136,8 +195,12 @@ export default function NewListing() {
             </div>
           )}
 
-          <button type="submit" className="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 transform hover:-translate-y-0.5">
-            Publish Listing
+          <button
+            type="submit"
+            disabled={createListingMutation.isPending}
+            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 disabled:opacity-60 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 transform hover:-translate-y-0.5"
+          >
+            {createListingMutation.isPending ? 'Publishing...' : 'Publish Listing'}
           </button>
         </form>
       </div>

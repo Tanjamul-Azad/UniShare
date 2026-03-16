@@ -10,7 +10,7 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('skillex_favorites');
+    const saved = localStorage.getItem('unishare_favorites') ?? localStorage.getItem('skillex_favorites');
     if (saved) {
       try {
         return new Set(JSON.parse(saved));
@@ -22,7 +22,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('skillex_favorites', JSON.stringify(Array.from(favorites)));
+    localStorage.setItem('unishare_favorites', JSON.stringify(Array.from(favorites)));
   }, [favorites]);
 
   const toggleFavorite = (id: string) => {

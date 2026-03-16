@@ -55,13 +55,13 @@ export default function ForgotPassword() {
                 Reset password
               </h2>
               <p className="mt-2 text-sm text-gray-500">
-                Enter your university email address and we'll send you a link to reset your password.
+                Enter your email address and we'll send you a link to reset your password.
               </p>
             </div>
 
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">University Email</label>
+                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-4 w-4 text-gray-400" />
@@ -75,7 +75,7 @@ export default function ForgotPassword() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="appearance-none relative block w-full pl-10 pr-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent sm:text-sm transition-all"
-                    placeholder="student@university.edu"
+                    placeholder="you@example.com"
                   />
                 </div>
               </div>

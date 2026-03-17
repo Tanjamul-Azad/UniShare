@@ -4,7 +4,7 @@
  */
 
 import { Suspense, lazy, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { FavoritesProvider } from './context/FavoritesContext';
@@ -54,7 +54,7 @@ export default function App() {
     <AuthProvider>
       <SocketProvider>
         <FavoritesProvider>
-          <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <HashRouter>
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={withPageLoader(<Home />)} />
@@ -97,7 +97,7 @@ export default function App() {
                 <Route path="*" element={withPageLoader(<NotFound />)} />
               </Route>
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </FavoritesProvider>
       </SocketProvider>
     </AuthProvider>

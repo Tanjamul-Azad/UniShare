@@ -6,6 +6,17 @@ import { defineConfig } from 'vite';
 export default defineConfig(() => {
   return {
     root: __dirname,
+    server: {
+      port: 5173,
+      proxy: {
+
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+        },
+      }
+    },
     plugins: [react(), tailwindcss()],
     test: {
       environment: 'jsdom',

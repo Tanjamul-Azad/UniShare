@@ -1,4 +1,10 @@
 import { MARKETPLACE_ITEMS, SUBSCRIPTION_GROUPS, REVIEWS } from '../data/mock';
+import { apiClient } from './apiClient';
+
+/**
+ * FEATURE FLAG: set USE_MOCK to false when connecting to the backend.
+ */
+const USE_MOCK = true;
 
 export type MarketplaceItem = (typeof MARKETPLACE_ITEMS)[number];
 export type SubscriptionGroup = (typeof SUBSCRIPTION_GROUPS)[number];
@@ -35,16 +41,28 @@ export type CreateSubscriptionGroupInput = {
 const wait = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function getMarketplaceItems(): Promise<MarketplaceItem[]> {
+  if (!USE_MOCK) {
+    return apiClient<MarketplaceItem[]>('/marketplace/');
+  }
+
   await wait();
   return MARKETPLACE_ITEMS;
 }
 
 export async function getMarketplaceItemById(id: string): Promise<MarketplaceItem | undefined> {
+  if (!USE_MOCK) {
+    return apiClient<MarketplaceItem>(`/marketplace/${id}/`);
+  }
+
   await wait();
   return MARKETPLACE_ITEMS.find((item) => item.id === id);
 }
 
 export async function getMarketplaceItemsBySellerId(sellerId: string): Promise<MarketplaceItem[]> {
+  if (!USE_MOCK) {
+    return apiClient<MarketplaceItem[]>(`/marketplace/?seller=${sellerId}`);
+  }
+
   await wait();
   return MARKETPLACE_ITEMS.filter((item) => item.sellerId === sellerId);
 }

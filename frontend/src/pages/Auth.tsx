@@ -37,17 +37,6 @@ export default function Auth() {
   // Get the page they were trying to visit, or default to dashboard
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const getDisplayNameFromEmail = (value: string) => {
-    const [localPart] = value.split('@');
-    if (!localPart) {
-      return 'Member';
-    }
-
-    const normalized = localPart.replace(/[._\-0-9]+/g, ' ').trim();
-    const titleCased = normalized.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-    return titleCased ? titleCased.slice(0, 40) : 'Member';
-  };
-
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
@@ -137,9 +126,26 @@ export default function Auth() {
     // Simulate API call for login
     setTimeout(() => {
       const savedName = localStorage.getItem(`mock_name_${email}`);
+      
+      // Calculate display name:
+      // 1. Used explicit name (if they were on signup page typing it in)
+      // 2. Fallback to extracting capitalized name from their email address
+      let calculatedName = savedName || name;
+      if (!calculatedName && email) {
+        const [localPart] = email.split('@');
+        if (localPart) {
+          calculatedName = localPart
+            .replace(/[._\-0-9]+/g, ' ')
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        }
+      }
+
       login({
         id: Math.random().toString(36).substring(7),
-        name: savedName || (isLogin ? getDisplayNameFromEmail(email) : name || getDisplayNameFromEmail(email)),
+        name: calculatedName || "Member",
         email: email,
         joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       });

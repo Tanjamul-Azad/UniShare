@@ -32,7 +32,7 @@ export default function Checkout() {
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-8 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-8 shadow-sm">
         <form onSubmit={handlePay} className="space-y-8">
           {/* Payment Method */}
           <div>

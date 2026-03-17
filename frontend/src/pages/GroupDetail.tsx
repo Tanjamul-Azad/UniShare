@@ -32,11 +32,11 @@ export default function GroupDetail() {
   }
 
   if (loading) {
-    return <div className="text-center py-20 text-gray-500 dark:text-gray-400">Loading group details...</div>;
+    return <div className="text-center py-20 text-gray-500">Loading group details...</div>;
   }
 
   if (!group) {
-    return <div className="text-center py-20 text-gray-500 dark:text-gray-400">Group not found</div>;
+    return <div className="text-center py-20 text-gray-500">Group not found</div>;
   }
 
   const Icon = iconMap[group.icon] || Users;
@@ -51,22 +51,22 @@ export default function GroupDetail() {
       transition={{ duration: 0.4 }}
       className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8"
     >
-      <Link to="/co-subs" className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors">
+      <Link to="/co-subs" className="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-8 transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Co-Subscriptions
       </Link>
 
-      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className={cn(
               "w-16 h-16 rounded-2xl flex items-center justify-center border",
               isSublet 
-                ? "bg-amber-50 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20" 
-                : "bg-indigo-50 border-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20"
+                ? "bg-amber-50 border-amber-100" 
+                : "bg-indigo-50 border-indigo-100"
             )}>
               <Icon className={cn(
                 "w-8 h-8",
-                isSublet ? "text-amber-600 dark:text-amber-400" : "text-indigo-600 dark:text-indigo-400"
+                isSublet ? "text-amber-600" : "text-indigo-600"
               )} />
             </div>
             <div>
@@ -74,48 +74,48 @@ export default function GroupDetail() {
                 <span className={cn(
                   "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
                   isSublet 
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
-                    : "bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-indigo-100 text-indigo-800"
                 )}>
                   {isSublet ? <Key className="w-3 h-3" /> : <Share2 className="w-3 h-3" />}
                   {isSublet ? 'Sublet' : 'Co-Share'}
                 </span>
               </div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white font-display">{group.service}</h1>
-              <p className="text-gray-500 dark:text-gray-400">Organized by {group.owner}</p>
+              <h1 className="text-2xl font-semibold text-gray-900 font-display">{group.service}</h1>
+              <p className="text-gray-500">Organized by {group.owner}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-light text-gray-900 dark:text-white">${group.pricePerMonth.toFixed(2)}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">per month {isSublet ? '' : '/ person'}</div>
+            <div className="text-3xl font-light text-gray-900">${group.pricePerMonth.toFixed(2)}</div>
+            <div className="text-sm text-gray-500">per month {isSublet ? '' : '/ person'}</div>
           </div>
         </div>
 
-        <div className="prose prose-sm text-gray-600 dark:text-gray-400 mb-8">
+        <div className="prose prose-sm text-gray-600 mb-8">
           <p>{group.description}</p>
         </div>
 
         {/* Progress & Escrow */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 mb-8 border border-gray-100 dark:border-gray-800">
+        <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
           {!isSublet ? (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900 dark:text-white">Group Status</h3>
-                <span className={isFull ? "text-rose-600 dark:text-rose-400 font-medium text-sm" : "text-emerald-600 dark:text-emerald-400 font-medium text-sm"}>
+                <h3 className="font-medium text-gray-900">Group Status</h3>
+                <span className={isFull ? "text-rose-600 font-medium text-sm" : "text-emerald-600 font-medium text-sm"}>
                   {isFull ? 'Group Full' : `${spotsLeft} spot${spotsLeft > 1 ? 's' : ''} remaining`}
                 </span>
               </div>
               
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-3">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${(group.filledSpots / group.totalSpots) * 100}%` }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full"
+                  className="h-full bg-indigo-600 rounded-full"
                 />
               </div>
               
-              <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <div className="flex justify-between text-sm text-gray-500 mb-6">
                 <span>{group.filledSpots} Members Joined</span>
                 <span>{group.totalSpots} Total Spots</span>
               </div>
@@ -123,24 +123,24 @@ export default function GroupDetail() {
           ) : (
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">Sublet Availability</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                <h3 className="font-medium text-gray-900 mb-1">Sublet Availability</h3>
+                <p className="text-sm text-gray-500 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" /> Available for {group.duration}
                 </p>
               </div>
               <span className={cn(
                 "px-3 py-1 rounded-full text-sm font-medium",
                 isFull 
-                  ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                  : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                  ? "bg-rose-50 text-rose-700 border border-rose-200"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
               )}>
                 {isFull ? 'Currently Rented' : 'Available Now'}
               </span>
             </div>
           )}
 
-          <div className="flex gap-3 items-start bg-indigo-50 dark:bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
-            <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="flex gap-3 items-start bg-indigo-50 text-indigo-800 p-4 rounded-xl border border-indigo-100">
+            <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-indigo-600" />
             <div className="text-sm">
               <strong className="block mb-1">Escrow Protected</strong>
               Your payment of ${group.pricePerMonth.toFixed(2)} will be held securely. The organizer only receives funds once {isSublet ? 'the sublet is confirmed' : `all ${group.totalSpots} spots are filled`} and the subscription is activated.
@@ -149,20 +149,20 @@ export default function GroupDetail() {
         </div>
 
         {/* Total breakdown */}
-        <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mb-8">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-4">Cost Breakdown</h4>
+        <div className="border-t border-gray-100 pt-6 mb-8">
+          <h4 className="font-medium text-gray-900 mb-4">Cost Breakdown</h4>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+            <div className="flex justify-between text-gray-600">
               <span>Total Subscription Cost</span>
               <span>${group.totalPrice.toFixed(2)}/mo</span>
             </div>
             {!isSublet && (
-              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+              <div className="flex justify-between text-gray-600">
                 <span>Divided by {group.totalSpots} members</span>
                 <span>÷ {group.totalSpots}</span>
               </div>
             )}
-            <div className="flex justify-between font-medium text-gray-900 dark:text-white pt-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between font-medium text-gray-900 pt-2 border-t border-gray-100">
               <span>{isSublet ? 'Your Monthly Cost' : 'Your Monthly Share'}</span>
               <span>${group.pricePerMonth.toFixed(2)}</span>
             </div>
@@ -172,7 +172,7 @@ export default function GroupDetail() {
         {isFull ? (
           <button 
             disabled
-            className="w-full py-4 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-medium rounded-xl transition-colors shadow-sm cursor-not-allowed"
+            className="w-full py-4 bg-gray-100 text-gray-400 font-medium rounded-xl transition-colors shadow-sm cursor-not-allowed"
           >
             {isSublet ? 'Currently Unavailable' : 'Group is Full'}
           </button>

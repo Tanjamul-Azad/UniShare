@@ -10,7 +10,7 @@ export default function NotFound() {
       transition={{ duration: 0.4 }}
       className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6"
     >
-      <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
+      <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
         <Search className="w-10 h-10 text-gray-400" />
       </div>
       <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-3">Page not found</h1>

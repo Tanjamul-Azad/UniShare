@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen w-full">
       {/* Hero Section */}
-      <section className="relative h-[90vh] w-full flex items-center justify-center overflow-hidden rounded-3xl mt-2 mx-auto max-w-[98%]">
+      <section className="relative h-[90vh] w-full flex items-center justify-center overflow-hidden rounded-2xl mt-2 mx-auto max-w-[98%]">
         <AnimatePresence mode="wait">
           <motion.img
             key={currentImage}
@@ -115,8 +115,8 @@ export default function Home() {
       {/* Quick Categories */}
       <section className="max-w-6xl mx-auto px-6 py-24 w-full font-body">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight mb-4 font-display">Explore by Category</h2>
-          <p className="text-gray-500 dark:text-gray-400">Find exactly what you need for your next semester.</p>
+          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight mb-4 font-display">Explore by Category</h2>
+          <p className="text-gray-500">Find exactly what you need for your next semester.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -132,12 +132,12 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
             >
-              <Link to={cat.link} className="group block p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg dark:hover:shadow-indigo-500/5 transition-all duration-300">
-                <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <cat.icon className="w-6 h-6 text-gray-900 dark:text-white" />
+              <Link to={cat.link} className="group block p-8 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <cat.icon className="w-6 h-6 text-gray-900" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{cat.title}</h3>
-                <p className="text-gray-500 dark:text-gray-400">{cat.desc}</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{cat.title}</h3>
+                <p className="text-gray-500">{cat.desc}</p>
               </Link>
             </motion.div>
           ))}

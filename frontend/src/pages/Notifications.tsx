@@ -71,7 +71,7 @@ export default function Notifications() {
           ))}
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
           {filteredNotifications.length === 0 ? (
             <div className="p-10 text-center">
               <Bell className="mx-auto h-9 w-9 text-slate-300" />

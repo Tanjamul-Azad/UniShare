@@ -43,8 +43,9 @@ export default function Auth() {
       return 'Member';
     }
 
-    const normalized = localPart.replace(/[._-]+/g, ' ').trim();
-    return normalized ? normalized.slice(0, 40) : 'Member';
+    const normalized = localPart.replace(/[._\-0-9]+/g, ' ').trim();
+    const titleCased = normalized.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    return titleCased ? titleCased.slice(0, 40) : 'Member';
   };
 
   const validateForm = () => {
@@ -123,6 +124,8 @@ export default function Auth() {
       setIsLoading(true);
       // Simulate API call for signup
       setTimeout(() => {
+        // Save name for mock login later
+        localStorage.setItem(`mock_name_${email}`, name);
         setIsLoading(false);
         setIsSuccess(true);
       }, 800);
@@ -130,16 +133,17 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    
+
     // Simulate API call for login
     setTimeout(() => {
+      const savedName = localStorage.getItem(`mock_name_${email}`);
       login({
         id: Math.random().toString(36).substring(7),
-        name: isLogin ? getDisplayNameFromEmail(email) : name || getDisplayNameFromEmail(email),
+        name: savedName || (isLogin ? getDisplayNameFromEmail(email) : name || getDisplayNameFromEmail(email)),
         email: email,
         joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       });
-      
+
       setIsLoading(false);
       navigate(from, { replace: true });
     }, 800);
@@ -155,16 +159,16 @@ export default function Auth() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900 p-6 sm:p-10 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm text-center"
+          className="max-w-md w-full space-y-8 bg-white p-6 sm:p-10 rounded-2xl border border-gray-200 shadow-sm text-center"
         >
-          <div className="mx-auto h-20 w-20 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mb-6">
-            <CheckCircle2 className="h-10 w-10 text-emerald-500 dark:text-emerald-400" />
+          <div className="mx-auto h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
           </div>
-          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight mb-4 font-display">
+          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight mb-4 font-display">
             Verify your email
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
-            We've sent a verification link to <span className="font-medium text-gray-900 dark:text-white">{email}</span>. 
+          <p className="text-gray-500 leading-relaxed mb-8">
+            We've sent a verification link to <span className="font-medium text-gray-900">{email}</span>. 
             Please check your inbox to verify and activate your account.
           </p>
           <div className="space-y-4">
@@ -177,8 +181,8 @@ export default function Auth() {
             >
               Back to login
             </button>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Didn't receive the email? <button className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Click to resend</button>
+            <p className="text-sm text-gray-500">
+              Didn't receive the email? <button className="text-indigo-600 font-medium hover:underline">Click to resend</button>
             </p>
           </div>
         </motion.div>
@@ -191,31 +195,31 @@ export default function Auth() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900 p-6 sm:p-10 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm"
+        className="max-w-md w-full space-y-8 bg-white p-6 sm:p-10 rounded-2xl border border-gray-200 shadow-sm"
       >
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gray-900 dark:bg-indigo-600 rounded-xl flex items-center justify-center mb-4">
+          <div className="mx-auto h-12 w-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4">
             <GraduationCap className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white tracking-tight font-display">
+          <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight font-display">
             {isLogin ? 'Welcome back' : 'Join UniShare'}
           </h2>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-sm text-gray-500">
             {isLogin ? 'Enter your details to access your account.' : 'Create an account and start trading smarter.'}
           </p>
         </div>
 
         {!isLogin && (
-          <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 flex gap-3 items-start">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex gap-3 items-start">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-emerald-800 leading-relaxed">
               <strong>Flexible registration.</strong> You can use any valid email address to create your UniShare account.
             </p>
           </div>
         )}
 
         {error && (
-          <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm rounded-xl p-3 text-center">
+          <div className="bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-xl p-3 text-center">
             {error}
           </div>
         )}
@@ -225,10 +229,10 @@ export default function Auth() {
             type="button"
             onClick={() => handleSocialAuth('google')}
             disabled={Boolean(socialLoading)}
-            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-gray-800 dark:text-gray-100 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {socialLoading === 'google' ? (
-              <svg className="animate-spin h-4 w-4 text-gray-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
@@ -242,10 +246,10 @@ export default function Auth() {
             type="button"
             onClick={() => handleSocialAuth('github')}
             disabled={Boolean(socialLoading)}
-            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 text-gray-800 dark:text-gray-100 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {socialLoading === 'github' ? (
-              <svg className="animate-spin h-4 w-4 text-gray-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
@@ -258,10 +262,10 @@ export default function Auth() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200 dark:border-gray-700" />
+            <span className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase tracking-wide">
-            <span className="bg-white dark:bg-gray-900 px-2 text-gray-400">or continue with email</span>
+            <span className="bg-white px-2 text-gray-400">or continue with email</span>
           </div>
         </div>
 
@@ -270,10 +274,10 @@ export default function Auth() {
             {!isLogin && (
               <>
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <UserIcon className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       id="name"
@@ -285,17 +289,17 @@ export default function Auth() {
                         setName(e.target.value);
                         clearFieldError('name');
                       }}
-                      className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.name ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'}`}
+                      className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.name ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 focus:ring-indigo-500'}`}
                       placeholder="Your full name"
                     />
                   </div>
-                  {fieldErrors.name ? <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{fieldErrors.name}</p> : null}
+                  {fieldErrors.name ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.name}</p> : null}
                 </div>
                 <div>
-                  <label htmlFor="university" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution (Optional)</label>
+                  <label htmlFor="university" className="block text-sm font-medium text-gray-700 mb-1">Institution (Optional)</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                      <Building className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       id="university"
@@ -303,7 +307,7 @@ export default function Auth() {
                       type="text"
                       value={university}
                       onChange={(e) => setUniversity(e.target.value)}
-                      className="appearance-none relative block w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent sm:text-sm transition-all"
+                      className="appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border border-gray-300 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition-all"
                       placeholder="Campus, company, or organization"
                     />
                   </div>
@@ -311,10 +315,10 @@ export default function Auth() {
               </>
             )}
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Mail className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   id="email-address"
@@ -327,17 +331,17 @@ export default function Auth() {
                         setEmail(e.target.value);
                         clearFieldError('email');
                       }}
-                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.email ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'}`}
+                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.email ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 focus:ring-indigo-500'}`}
                   placeholder="you@example.com"
                 />
               </div>
-              {fieldErrors.email ? <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{fieldErrors.email}</p> : null}
+              {fieldErrors.email ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.email}</p> : null}
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -351,21 +355,21 @@ export default function Auth() {
                     clearFieldError('password');
                     clearFieldError('confirmPassword');
                   }}
-                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.password ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'}`}
+                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.password ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 focus:ring-indigo-500'}`}
                   placeholder="••••••••"
                 />
               </div>
-              {fieldErrors.password ? <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{fieldErrors.password}</p> : null}
+              {fieldErrors.password ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.password}</p> : null}
               {!fieldErrors.password && !isLogin ? (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Use at least 8 characters.</p>
+                <p className="mt-1 text-xs text-gray-500">Use at least 8 characters.</p>
               ) : null}
             </div>
             {!isLogin && (
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <Lock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     id="confirm-password"
@@ -378,11 +382,11 @@ export default function Auth() {
                       setConfirmPassword(e.target.value);
                       clearFieldError('confirmPassword');
                     }}
-                    className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.confirmPassword ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400'}`}
+                    className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.confirmPassword ? 'border-rose-400 focus:ring-rose-400' : 'border-gray-300 focus:ring-indigo-500'}`}
                     placeholder="••••••••"
                   />
                 </div>
-                {fieldErrors.confirmPassword ? <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{fieldErrors.confirmPassword}</p> : null}
+                {fieldErrors.confirmPassword ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.confirmPassword}</p> : null}
               </div>
             )}
           </div>
@@ -390,11 +394,11 @@ export default function Auth() {
           {isLogin && (
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded dark:bg-gray-800" />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Remember me</label>
+                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">Remember me</label>
               </div>
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline">Forgot password?</Link>
+                <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">Forgot password?</Link>
               </div>
             </div>
           )}
@@ -425,7 +429,7 @@ export default function Auth() {
           <button 
             onClick={toggleMode}
             disabled={Boolean(socialLoading)}
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+            className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>

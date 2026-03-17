@@ -6,6 +6,13 @@ interface User {
   email: string;
   avatar?: string;
   joinedDate?: string;
+  address?: string;
+  phone?: string;
+  bio?: string;
+  university?: string;
+  major?: string;
+  graduationYear?: string;
+  isVerified?: boolean;
 }
 
 interface AuthContextType {

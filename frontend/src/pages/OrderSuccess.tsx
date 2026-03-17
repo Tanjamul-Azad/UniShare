@@ -14,7 +14,7 @@ export default function OrderSuccess() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="mx-auto max-w-3xl rounded-3xl border border-emerald-200 bg-white/95 p-8 shadow-sm"
+        className="mx-auto max-w-3xl rounded-2xl border border-emerald-200 bg-white/95 p-8 shadow-sm"
       >
         <div className="mx-auto flex w-fit items-center gap-3 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
           <CheckCircle2 className="h-4 w-4" />

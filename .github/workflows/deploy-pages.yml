@@ -38,10 +38,8 @@ jobs:
         run: npm ci
 
       - name: Build
-        # If your Vite project requires environment variables during build, you can add them here:
-        # env:
-        #   VITE_API_URL: https://your-backend-api-url.com/api
-        run: npm run build
+        # Passing --base=/UniShare/ so relative paths work correctly on GitHub Pages
+        run: npx vite build --config frontend/vite.config.ts --base=/UniShare/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

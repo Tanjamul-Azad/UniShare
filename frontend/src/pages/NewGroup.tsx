@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { createSubscriptionGroup } from '../lib/api';
 import { emitToast } from '../lib/toastBus';
 import { newGroupSchema } from '../lib/validation';
+import Modal from '../components/Modal';
 
 type GroupFieldErrors = Partial<Record<'service' | 'monthlyCost' | 'totalSpots' | 'duration' | 'description', string>>;
 
@@ -66,105 +67,104 @@ export default function NewGroup() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto py-8 px-4">
-      <Link to="/co-subs" className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition-colors">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Co-Subscriptions
-      </Link>
+    <Modal
+      isOpen={true}
+      onClose={() => navigate(-1)}
+      title="List a Subscription"
+      description="Share or sublet your digital subscriptions securely."
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Listing Type Selection */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">Listing Type</label>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { id: 'share', label: 'Share (Group)', icon: Users, desc: 'Split the cost' },
+              { id: 'sublet', label: 'Sublet', icon: Key, desc: 'Rent out your plan' }
+            ].map((type) => (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => setListingType(type.id as 'share' | 'sublet')}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1.5 py-3 px-4 rounded-xl border transition-all duration-200",
+                  listingType === type.id 
+                    ? "border-indigo-600 bg-indigo-50 text-indigo-700" 
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                )}
+              >
+                <type.icon className="w-5 h-5 mb-1" />
+                <span className="text-sm font-medium">{type.label}</span>
+                <span className="text-xs opacity-70">{type.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="bg-white/80 dark:bg-[#1A1A2E]/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-white/10 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] relative overflow-hidden">
-        {/* Decorative gradients */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-emerald-500 to-amber-500" />
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 font-['Plus_Jakarta_Sans']">List a Subscription</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8 font-['DM_Sans']">Share or sublet your digital subscriptions securely.</p>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Service Name</label>
+          <input name="service" type="text" required placeholder="e.g. Spotify Family, Netflix Premium" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
+          {fieldErrors.service && <p className="mt-1 text-sm text-red-500">{fieldErrors.service}</p>}
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-8 relative z-10 font-['DM_Sans']">
-          
-          {/* Listing Type Selection */}
-          <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Listing Type</label>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { id: 'share', label: 'Share (Group Plan)', icon: Users, desc: 'Split the cost with others' },
-                { id: 'sublet', label: 'Sublet', icon: Key, desc: 'Rent out your unused account' }
-              ].map((type) => (
-                <button
-                  key={type.id}
-                  type="button"
-                  onClick={() => setListingType(type.id as 'share' | 'sublet')}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-2 py-4 px-4 rounded-xl border-2 transition-all duration-200",
-                    listingType === type.id 
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" 
-                      : "border-gray-200 dark:border-white/10 bg-transparent text-gray-600 dark:text-gray-400 hover:border-indigo-200 dark:hover:border-indigo-500/30"
-                  )}
-                >
-                  <type.icon className="w-6 h-6 mb-1" />
-                  <span className="text-sm font-semibold">{type.label}</span>
-                  <span className="text-xs opacity-70">{type.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Service Name</label>
-            <input name="service" type="text" required placeholder="e.g. Spotify Family, Netflix Premium, Adobe CC" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
-            {fieldErrors.service && <p className="mt-1 text-xs text-rose-600">{fieldErrors.service}</p>}
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {listingType === 'share' ? 'Total Monthly Cost ($)' : 'Monthly Sublet Price ($)'}
+            </label>
+            <input name="monthlyCost" type="number" required min="0" step="0.01" placeholder="0.00" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
+            {fieldErrors.monthlyCost && <p className="mt-1 text-sm text-red-500">{fieldErrors.monthlyCost}</p>}
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {listingType === 'share' ? 'Total Monthly Cost ($)' : 'Monthly Sublet Price ($)'}
-              </label>
-              <input name="monthlyCost" type="number" required min="0" step="0.01" placeholder="0.00" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
-              {fieldErrors.monthlyCost && <p className="mt-1 text-xs text-rose-600">{fieldErrors.monthlyCost}</p>}
-            </div>
-            {listingType === 'share' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Total Spots (Including you)</label>
-                <input name="totalSpots" type="number" required min="2" max="10" placeholder="e.g. 4" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
-                {fieldErrors.totalSpots && <p className="mt-1 text-xs text-rose-600">{fieldErrors.totalSpots}</p>}
-              </motion.div>
-            )}
-            {listingType === 'sublet' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Duration (Months)</label>
-                <input name="duration" type="number" required min="1" max="12" placeholder="e.g. 3" className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 dark:text-white transition-all" />
-                {fieldErrors.duration && <p className="mt-1 text-xs text-rose-600">{fieldErrors.duration}</p>}
-              </motion.div>
-            )}
-          </div>
+          {listingType === 'share' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Total Spots</label>
+              <input name="totalSpots" type="number" required min="2" max="10" placeholder="e.g. 4" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
+              {fieldErrors.totalSpots && <p className="mt-1 text-sm text-red-500">{fieldErrors.totalSpots}</p>}
+            </motion.div>
+          )}
+          {listingType === 'sublet' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Duration (Months)</label>
+              <input name="duration" type="number" required min="1" max="12" placeholder="e.g. 3" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
+              {fieldErrors.duration && <p className="mt-1 text-sm text-red-500">{fieldErrors.duration}</p>}
+            </motion.div>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description & Rules</label>
-            <textarea name="description" required rows={4} placeholder={listingType === 'share' ? "Explain how the account will be shared, rules for profiles, etc." : "Explain what is included, any restrictions, etc."} className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none text-gray-900 dark:text-white transition-all"></textarea>
-            {fieldErrors.description && <p className="mt-1 text-xs text-rose-600">{fieldErrors.description}</p>}
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Description & Rules</label>
+          <textarea name="description" required rows={4} placeholder={listingType === 'share' ? "Explain how the account will be shared, rules for profiles, etc." : "Explain what is included, any restrictions, etc."} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-none transition-colors"></textarea>
+          {fieldErrors.description && <p className="mt-1 text-sm text-red-500">{fieldErrors.description}</p>}
+        </div>
 
-          <div className="bg-indigo-50 dark:bg-indigo-500/10 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20 flex gap-3 items-start">
-            <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-indigo-800 dark:text-indigo-200">
-              <strong>Escrow Protection:</strong> Funds will be collected from members and held securely. You will receive the payout once {listingType === 'share' ? 'the group is full' : 'the sublet begins'} and you provide the access credentials.
-            </p>
-          </div>
+        <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex gap-3 items-start">
+          <ShieldCheck className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-indigo-800">
+            <strong>Escrow Protection:</strong> Funds will be collected from members and held securely. You will receive the payout once {listingType === 'share' ? 'the group is full' : 'the sublet begins'} and you provide the access credentials.
+          </p>
+        </div>
 
+        <div className="pt-4 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end border-t border-gray-100">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={createGroupMutation.isPending}
-            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 disabled:opacity-60 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 transform hover:-translate-y-0.5"
+            className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-all active:scale-[0.98] disabled:opacity-70"
           >
             {createGroupMutation.isPending
               ? 'Creating...'
               : listingType === 'share'
-                ? 'Create Group Plan'
+                ? 'Create Group'
                 : 'List Sublet'}
           </button>
-        </form>
-      </div>
-    </motion.div>
+        </div>
+      </form>
+    </Modal>
   );
 }

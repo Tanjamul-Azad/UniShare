@@ -74,17 +74,17 @@ export default function SellerProfile() {
         ) : (
           <div className="space-y-12">
             {/* Profile Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-6">
-                <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-3xl font-semibold border-4 border-white dark:border-gray-900 shadow-md">
+                <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-3xl font-semibold border-4 border-white shadow-sm">
                   {item?.seller.charAt(0)}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2 font-display">{sellerProfile?.sellerName}</h1>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                  <h1 className="text-3xl font-semibold text-gray-900 mb-2 font-display">{sellerProfile?.sellerName}</h1>
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span className="font-medium text-gray-900 dark:text-white">{sellerProfile?.sellerRating}</span>
+                      <span className="font-medium text-gray-900">{sellerProfile?.sellerRating}</span>
                       <span>({sellerProfile?.reviewsCount} reviews)</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -100,11 +100,14 @@ export default function SellerProfile() {
                       <span>Joined Sep 2023</span>
                     </div>
                     {sellerProfile?.sellerLastActive && (
-                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center gap-1 text-emerald-600">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         <span>{sellerProfile.sellerLastActive}</span>
                       </div>
                     )}
+                  </div>
+                  <div className="mt-4 text-gray-600 text-sm max-w-xl">
+                    <p>Computer Science major, Class of 2026. Usually around the Engineering building or Main Library. Happy to bundle items if you see multiple things you need!</p>
                   </div>
                 </div>
               </div>
@@ -118,65 +121,65 @@ export default function SellerProfile() {
             </div>
 
             {/* Seller Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-3 bg-white rounded-2xl border border-gray-200 shadow-sm divide-y md:divide-y-0 md:divide-x divide-gray-100">
               <div className="flex flex-col items-center justify-center p-6">
-                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-4">
                   <Package className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-semibold text-gray-900 dark:text-white font-display mb-1">{sellerItems.length}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 font-body">Items Listed</div>
+                <div className="text-3xl font-semibold text-gray-900 font-display mb-1">{sellerItems.length}</div>
+                <div className="text-sm text-gray-500 font-body">Items Listed</div>
               </div>
               <div className="flex flex-col items-center justify-center p-6">
-                <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-4">
                   <Clock className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-semibold text-gray-900 dark:text-white font-display mb-1">
+                <div className="text-3xl font-semibold text-gray-900 font-display mb-1">
                   {sellerProfile?.sellerRating && sellerProfile.sellerRating >= 4.8 ? '< 15 mins' : '~ 1 hr'}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 font-body">Avg Response Time</div>
+                <div className="text-sm text-gray-500 font-body">Avg Response Time</div>
               </div>
               <div className="flex flex-col items-center justify-center p-6">
-                <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <div className="text-3xl font-semibold text-gray-900 dark:text-white font-display mb-1">
+                <div className="text-3xl font-semibold text-gray-900 font-display mb-1">
                   {(sellerItems.length * 14) + 23}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 font-body">Successful Transactions</div>
+                <div className="text-sm text-gray-500 font-body">Successful Transactions</div>
               </div>
             </div>
 
             {/* Seller's Items */}
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 font-display">Items for Sale</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6 font-display">Items for Sale</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sellerItems.map((sellerItem) => (
-                  <Link key={sellerItem.id} to={`/marketplace/${sellerItem.id}`} className="group flex flex-col bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-300">
-                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+                  <Link key={sellerItem.id} to={`/marketplace/${sellerItem.id}`} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-300">
+                    <div className="aspect-[4/3] bg-gray-50 relative overflow-hidden">
                       <img 
                         src={sellerItem.image} 
                         alt={sellerItem.title} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 shadow-sm">
+                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[11px] font-bold uppercase text-gray-700 shadow-sm">
                         {sellerItem.condition}
                       </div>
                       <button
                         onClick={(e) => handleToggleFavorite(e, sellerItem.id)}
-                        className="absolute bottom-3 right-3 p-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform z-10"
+                        className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 hover:text-rose-500 active:scale-95 transition-all z-10"
                       >
                         <Heart 
                           className={cn(
                             "w-4 h-4 transition-colors",
-                            isFavorite(sellerItem.id) ? "fill-rose-500 text-rose-500" : "text-gray-400 dark:text-gray-500"
+                            isFavorite(sellerItem.id) ? "fill-rose-500 text-rose-500" : "text-gray-400"
                           )} 
                         />
                       </button>
                     </div>
                     <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{sellerItem.title}</h3>
-                      <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mt-auto">${sellerItem.price.toFixed(2)}</p>
+                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{sellerItem.title}</h3>
+                      <p className="text-lg font-semibold text-indigo-600 mt-auto">${sellerItem.price.toFixed(2)}</p>
                     </div>
                   </Link>
                 ))}
@@ -184,8 +187,8 @@ export default function SellerProfile() {
             </div>
 
             {/* Seller Reviews */}
-            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-8 font-display">Seller Reviews</h2>
+            <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-8 font-display">Seller Reviews</h2>
               <Reviews targetId={id || ''} targetType="seller" />
             </div>
           </div>

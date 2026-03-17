@@ -24,7 +24,7 @@ export default function ForgotPassword() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-gray-200 shadow-sm"
+        className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl border border-gray-200 shadow-sm"
       >
         {isSubmitted ? (
           <div className="text-center">

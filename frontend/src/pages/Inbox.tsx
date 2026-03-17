@@ -81,112 +81,165 @@ export default function Inbox() {
   };
 
   return (
-    <section className="relative isolate overflow-hidden py-10 sm:py-14">
+    <section className="relative isolate overflow-hidden py-10 sm:py-14 min-h-screen bg-slate-50/30">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_#fae8ff_0,_transparent_40%),radial-gradient(circle_at_bottom_right,_#e0f2fe_0,_transparent_45%)]" />
 
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Inbox</h1>
           <p className="mt-2 text-slate-600">Chat with buyers, sellers, and group members in one place.</p>
         </motion.div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[320px_1fr]">
-          <aside className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 p-4">
-              <p className="text-sm font-semibold text-slate-900">Recent Conversations</p>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr] items-start">
+          {/* Sidebar */}
+          <aside className="flex flex-col h-[600px] rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="border-b border-slate-100 p-5 bg-white flex justify-between items-center z-10 sticky top-0">
+              <h2 className="text-base font-semibold text-slate-900">Messages</h2>
+              <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{conversations.length}</span>
             </div>
-
-            {conversations.length === 0 ? (
-              <div className="p-8 text-center">
-                <MessageSquare className="mx-auto h-8 w-8 text-slate-300" />
-                <p className="mt-2 text-sm text-slate-500">No conversations yet</p>
-              </div>
-            ) : (
-              <ul className="max-h-[540px] overflow-y-auto">
-                {conversations.map((conversation) => {
-                  const isActive = conversation.participantId === selectedConversationId;
-                  return (
-                    <li key={conversation.participantId}>
-                      <button
-                        onClick={() => setActiveParticipantId(conversation.participantId)}
-                        className={`w-full border-b border-slate-100 px-4 py-3 text-left transition-colors ${
-                          isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <p className={`text-sm font-medium ${isActive ? 'text-white' : 'text-slate-900'}`}>
-                          {conversation.participantName}
-                        </p>
-                        <p className={`mt-1 truncate text-xs ${isActive ? 'text-slate-200' : 'text-slate-500'}`}>
-                          {conversation.lastMessage}
-                        </p>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </aside>
-
-          <div className="flex min-h-[520px] flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 p-4">
-              <p className="text-sm font-semibold text-slate-900">
-                {selectedConversationId ? 'Conversation' : 'Select a chat'}
-              </p>
-            </div>
-
-            <div className="flex-1 space-y-3 overflow-y-auto p-5">
-              {threadMessages.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-center">
-                  <div>
-                    <MessageSquare className="mx-auto h-8 w-8 text-slate-300" />
-                    <p className="mt-2 text-sm text-slate-500">Open a conversation to view messages.</p>
+            
+            <div className="flex-1 overflow-y-auto">
+              {conversations.length === 0 ? (
+                <div className="p-8 text-center flex flex-col items-center justify-center h-full">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
+                    <MessageSquare className="h-7 w-7 text-slate-400" />
                   </div>
+                  <p className="text-sm font-medium text-slate-900">No messages yet</p>
+                  <p className="mt-2 text-xs text-slate-500 leading-relaxed max-w-[200px]">
+                    Connect with users from the marketplace or groups to start chatting.
+                  </p>
                 </div>
               ) : (
-                threadMessages.map((message) => {
-                  const isMine = message.senderId === user?.id;
-                  return (
-                    <div key={message.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
-                          isMine
-                            ? 'rounded-br-sm bg-slate-900 text-white'
-                            : 'rounded-bl-sm border border-slate-200 bg-slate-50 text-slate-800'
-                        }`}
-                      >
-                        <p>{message.content}</p>
-                        <p className={`mt-1 text-[10px] ${isMine ? 'text-slate-300' : 'text-slate-400'}`}>
-                          {new Date(message.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
+                <ul className="divide-y divide-slate-50">
+                  {conversations.map((conversation) => {
+                    const isActive = conversation.participantId === selectedConversationId;
+                    return (
+                      <li key={conversation.participantId}>
+                        <button
+                          onClick={() => setActiveParticipantId(conversation.participantId)}
+                          className={`w-full px-5 py-4 text-left transition-all flex items-start gap-4 ${
+                            isActive ? 'bg-indigo-50/60 relative' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-full" />
+                          )}
+                          <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-700 font-bold text-lg shadow-sm border border-indigo-200/50">
+                            {conversation.participantName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0 pt-0.5">
+                            <div className="flex justify-between items-baseline mb-1">
+                              <p className={`text-sm font-semibold truncate pr-3 ${isActive ? 'text-indigo-950' : 'text-slate-900'}`}>
+                                {conversation.participantName}
+                              </p>
+                              <span className={`text-[11px] whitespace-nowrap ${isActive ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
+                                {new Date(conversation.lastTimestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                            <p className={`truncate text-xs ${isActive ? 'text-indigo-800' : 'text-slate-500'}`}>
+                              {conversation.lastMessage}
+                            </p>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </div>
+          </aside>
 
-            <form onSubmit={handleSendMessage} className="border-t border-slate-100 p-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={messageDraft}
-                  onChange={(event) => setMessageDraft(event.target.value)}
-                  placeholder={selectedConversationId ? 'Type your message...' : 'Choose a conversation first'}
-                  disabled={!selectedConversationId}
-                  className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:border-slate-300 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-                />
-                <button
-                  type="submit"
-                  disabled={!selectedConversationId || !messageDraft.trim()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
+          {/* Chat Window */}
+          <div className="flex flex-col h-[600px] rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden relative">
+            {!selectedConversationId ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-50/30">
+                <div className="w-20 h-20 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center mb-5">
+                  <MessageSquare className="h-10 w-10 text-indigo-300" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900">Your Messages</h3>
+                <p className="mt-3 text-sm text-slate-500 max-w-sm leading-relaxed">
+                  Select a conversation from the sidebar to view messages, or explore the marketplace to contact sellers directly.
+                </p>
               </div>
-            </form>
+            ) : (
+              <>
+                <div className="border-b border-slate-100 px-6 py-4 flex items-center gap-4 bg-white/95 backdrop-blur-sm shadow-sm z-10 sticky top-0">
+                  <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-base shadow-sm border border-indigo-200/50">
+                    {conversations.find(c => c.participantId === selectedConversationId)?.participantName.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">
+                      {conversations.find(c => c.participantId === selectedConversationId)?.participantName || 'User'}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_0_2px_rgba(16,185,129,0.2)]"></div>
+                      <span className="text-[12px] font-medium text-slate-500">Active now</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-5 overflow-y-auto p-6 bg-slate-50/50 scroll-smooth">
+                  {threadMessages.length === 0 ? (
+                    <div className="flex h-full flex-col items-center justify-center text-center">
+                       <span className="text-xs font-medium text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-100 shadow-sm mt-auto mb-4">
+                         Start of conversation
+                       </span>
+                    </div>
+                  ) : (
+                    threadMessages.map((message) => {
+                      const isMine = message.senderId === user?.id;
+                      return (
+                        <div key={message.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} group animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                          <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                            <div
+                              className={`rounded-2xl px-5 py-3 text-[15px] shadow-sm ${
+                                isMine
+                                  ? 'rounded-tr-sm bg-indigo-600 text-white'
+                                  : 'rounded-tl-sm border border-slate-200 bg-white text-slate-800'
+                              }`}
+                            >
+                              <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                            </div>
+                            <span className="mt-1.5 text-[10px] text-slate-400 font-medium px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {new Date(message.timestamp).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <form onSubmit={handleSendMessage} className="border-t border-slate-100 p-5 bg-white">
+                  <div className="flex items-end gap-3 relative">
+                    <textarea
+                      value={messageDraft}
+                      onChange={(event) => setMessageDraft(event.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(e as unknown as FormEvent);
+                        }
+                      }}
+                      placeholder="Type your message..."
+                      className="flex-1 resize-none overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm text-slate-800 outline-none transition-all min-h-[52px] max-h-[120px] focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50/50"
+                      rows={1}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!messageDraft.trim()}
+                      className="inline-flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none"
+                    >
+                      <Send className="h-5 w-5 ml-1" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">Press Enter to send, Shift+Enter for new line</p>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>

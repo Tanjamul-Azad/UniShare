@@ -93,23 +93,23 @@ export default function Marketplace() {
     >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight font-display">Marketplace</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 font-body">Buy, share, and barter study materials with peers.</p>
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">Marketplace</h1>
+          <p className="text-gray-500 mt-1">Buy, share, and barter study materials with peers.</p>
         </div>
-        <div className="flex items-center gap-3 font-body">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm border",
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm border",
               showFilters || activeFilterCount > 0
-                ? "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white" 
-                : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                ? "bg-gray-100 border-gray-300 text-gray-900" 
+                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
             )}
           >
             <Filter className="w-4 h-4" />
-            Filters {activeFilterCount > 0 && <span className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs rounded-full w-5 h-5 flex items-center justify-center">{activeFilterCount}</span>}
+            Filters {activeFilterCount > 0 && <span className="bg-indigo-100 text-indigo-700 text-xs rounded-full px-1.5 py-0.5 ml-1 flex items-center justify-center font-semibold">{activeFilterCount}</span>}
           </button>
-          <Link to="/marketplace/new" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+          <Link to="/marketplace/new" className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">
             <Plus className="w-4 h-4" />
             List Item
           </Link>
@@ -127,22 +127,22 @@ export default function Marketplace() {
       )}
 
       {/* Search and Filters Area */}
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4 font-body">
+      <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-5 font-body relative z-10">
         <div className="relative">
-          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="What are you looking for?"
+            placeholder="Search titles, descriptions..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-500/50 transition-all focus:bg-white dark:focus:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 placeholder:text-gray-500"
           />
           {searchQuery && (
             <button 
               onClick={clearSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors bg-gray-200/50 hover:bg-gray-200 rounded-full p-1"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -151,21 +151,21 @@ export default function Marketplace() {
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="pt-4 border-t border-gray-100 dark:border-gray-800 grid grid-cols-1 md:grid-cols-4 gap-6"
+            className="pt-5 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             {/* Type Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Listing Type</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Listing Type</label>
               <div className="flex flex-wrap gap-2">
                 {types.map(type => (
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
                       selectedType === type 
-                        ? "bg-indigo-600 text-white" 
-                        : "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700" 
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                     )}
                   >
                     {type}
@@ -176,17 +176,17 @@ export default function Marketplace() {
 
             {/* Category Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Category</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Category</label>
               <div className="flex flex-wrap gap-2">
                 {categories.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
                       selectedCategory === cat 
-                        ? "bg-indigo-600 text-white" 
-                        : "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700" 
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                     )}
                   >
                     {cat}
@@ -197,17 +197,17 @@ export default function Marketplace() {
 
             {/* Condition Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Condition</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Condition</label>
               <div className="flex flex-wrap gap-2">
                 {conditions.map(cond => (
                   <button
                     key={cond}
                     onClick={() => setSelectedCondition(cond)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
                       selectedCondition === cond 
-                        ? "bg-indigo-600 text-white" 
-                        : "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700" 
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                     )}
                   >
                     {cond}
@@ -218,26 +218,27 @@ export default function Marketplace() {
 
             {/* Price Range Filter */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price Range</label>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">${priceRange[0]} - ${priceRange[1]}</span>
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Max Price</label>
+                <span className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">${priceRange[1]}</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 py-2">
                 <input 
                   type="range" 
                   min="0" 
-                  max="100" 
+                  max="200"
+                  step="5"
                   value={priceRange[1]} 
                   onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                  className="w-full accent-indigo-600"
+                  className="w-full accent-indigo-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               {activeFilterCount > 0 && (
                 <button 
                   onClick={resetFilters}
-                  className="mt-4 text-sm text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium transition-colors"
+                  className="mt-3 text-sm text-gray-500 hover:text-gray-900 border border-gray-200 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg font-medium transition-colors w-full"
                 >
-                  Reset Filters
+                  Clear All Filters
                 </button>
               )}
             </div>
@@ -250,15 +251,15 @@ export default function Marketplace() {
         {loading ? (
           // Skeleton Loaders
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col h-full animate-pulse">
-              <div className="aspect-4/5 rounded-2xl bg-gray-200 dark:bg-gray-800 mb-4 w-full"></div>
-              <div className="space-y-2 flex-1 flex flex-col">
+            <div key={i} className="flex flex-col h-full animate-pulse p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+              <div className="aspect-[4/3] rounded-xl bg-gray-100 mb-4 w-full"></div>
+              <div className="space-y-3 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/4"></div>
+                  <div className="h-5 bg-gray-100 rounded w-3/4"></div>
+                  <div className="h-5 bg-gray-100 rounded w-1/4"></div>
                 </div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/3 mt-auto pt-1"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-100 rounded w-1/3 mt-auto pt-2"></div>
               </div>
             </div>
           ))
@@ -271,51 +272,52 @@ export default function Marketplace() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
             >
-              <Link to={`/marketplace/${item.id}`} className="group cursor-pointer flex flex-col h-full">
-                <div className="aspect-4/5 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-4 relative border border-gray-200/50 dark:border-gray-700/50">
+              <Link to={`/marketplace/${item.id}`} className="group cursor-pointer flex flex-col h-full bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 mb-4 relative">
+                  <div className="absolute inset-0 bg-gray-900/5 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 shadow-sm">
+                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-lg text-[11px] font-bold tracking-wide text-gray-700 uppercase shadow-sm z-20">
                     {item.condition}
                   </div>
                   {item.type && (
                     <div className={cn(
-                      "absolute top-3 right-3 px-2.5 py-1 backdrop-blur-sm rounded-full text-xs font-medium shadow-sm capitalize",
-                      item.type === 'sell' ? "bg-indigo-100/90 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300" :
-                      item.type === 'share' ? "bg-emerald-100/90 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" :
-                      "bg-amber-100/90 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                      "absolute top-3 right-3 px-2.5 py-1 backdrop-blur-md rounded-lg text-[11px] font-bold uppercase tracking-wide shadow-sm z-20",
+                      item.type === 'sell' ? "bg-indigo-600/95 text-white" :
+                      item.type === 'share' ? "bg-emerald-600/95 text-white" :
+                      "bg-amber-500/95 text-white"
                     )}>
                       {item.type}
                     </div>
                   )}
                   <button
                     onClick={(e) => handleToggleFavorite(e, item.id)}
-                    className="absolute bottom-3 right-3 p-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform z-10"
+                    className="absolute bottom-3 right-3 p-2 bg-white/95 backdrop-blur-md rounded-full shadow-sm hover:scale-110 active:scale-95 transition-all z-20 text-gray-400 hover:text-rose-500"
                   >
                     <Heart 
                       className={cn(
                         "w-4 h-4 transition-colors",
-                        isFavorite(item.id) ? "fill-rose-500 text-rose-500" : "text-gray-400 dark:text-gray-500"
+                        isFavorite(item.id) ? "fill-rose-500 text-rose-500" : "text-gray-400"
                       )} 
                     />
                   </button>
                 </div>
                 <div className="space-y-1 flex-1 flex flex-col">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-gray-900 dark:text-white leading-tight line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{item.title}</h3>
-                    <span className="font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                    <h3 className="font-semibold text-gray-900 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">{item.title}</h3>
+                    <span className="font-semibold text-gray-900 whitespace-nowrap">
                       {item.type === 'sell' ? `$${item.price}` : 
                        item.type === 'share' ? 'Free' : 'Barter'}
                     </span>
                   </div>
                   <div className="mt-auto pt-1">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{item.category} • {item.seller}</p>
+                    <p className="text-sm text-gray-500">{item.category} • {item.seller}</p>
                     {item.sellerLastActive && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         {item.sellerLastActive}
                       </p>
@@ -328,11 +330,11 @@ export default function Marketplace() {
         ) : (
           // Empty State
           <div className="col-span-full py-20 text-center">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No items found</h3>
-            <p className="text-gray-500 dark:text-gray-400">Try adjusting your search or filters to find what you're looking for.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No items found</h3>
+            <p className="text-gray-500">Try adjusting your search or filters to find what you're looking for.</p>
             {activeFilterCount > 0 && (
               <button 
                 onClick={resetFilters}

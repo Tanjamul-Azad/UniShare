@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Search, Github, Twitter, Linkedin, ShoppingCart, MessageSquare } from 'lucide-react';
+import { BookOpen, Search, Github, Twitter, Linkedin, ShoppingCart, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -43,7 +43,7 @@ export default function Layout() {
         )}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-10">
+          <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2 group">
               <div className="w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <BookOpen className="w-4 h-4 text-white" />
@@ -51,7 +51,7 @@ export default function Layout() {
               <span className="font-semibold text-xl tracking-tight text-gray-900">UniShare</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1 ml-4">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -176,7 +176,6 @@ export default function Layout() {
               <h4 className="font-semibold text-gray-900 mb-4">Company</h4>
               <ul className="space-y-3 text-sm text-gray-500">
                 <li><Link to="/about" className="hover:text-gray-900 transition-colors">About Us</Link></li>
-                <li><Link to="/careers" className="hover:text-gray-900 transition-colors">Careers</Link></li>
                 <li><Link to="/blog" className="hover:text-gray-900 transition-colors">Blog</Link></li>
                 <li><Link to="/contact" className="hover:text-gray-900 transition-colors">Contact</Link></li>
               </ul>

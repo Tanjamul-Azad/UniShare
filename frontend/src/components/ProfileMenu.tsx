@@ -104,7 +104,18 @@ export default function ProfileMenu() {
 
                 <motion.div variants={menuItemVariants}>
                   <Link
-                    to="/profile?tab=profile"
+                    to="/profile?tab=overview"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </motion.div>
+
+                <motion.div variants={menuItemVariants}>
+                  <Link
+                    to="/profile?tab=settings"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
@@ -185,7 +196,17 @@ export default function ProfileMenu() {
                 </motion.div>
                 <motion.div variants={menuItemVariants}>
                   <Link
-                    to="/profile?tab=profile"
+                    to="/profile?tab=overview"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-gray-700 bg-gray-50"
+                  >
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </motion.div>
+                <motion.div variants={menuItemVariants}>
+                  <Link
+                    to="/profile?tab=settings"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-gray-700 bg-gray-50"
                   >

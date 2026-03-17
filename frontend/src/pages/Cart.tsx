@@ -57,7 +57,7 @@ export default function Cart() {
           ))}
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm h-fit">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-fit">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
           <div className="space-y-3 text-sm text-gray-600 mb-6">
             <div className="flex justify-between">

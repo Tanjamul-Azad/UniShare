@@ -21,7 +21,6 @@ const GroupDetail = lazy(() => import('./pages/GroupDetail'));
 const About = lazy(() => import('./pages/About'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 const Pricing = lazy(() => import('./pages/Pricing'));
-const Careers = lazy(() => import('./pages/Careers'));
 const Blog = lazy(() => import('./pages/Blog'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Privacy = lazy(() => import('./pages/Privacy'));
@@ -29,7 +28,13 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Cookies = lazy(() => import('./pages/Cookies'));
 const Auth = lazy(() => import('./pages/Auth'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const DashboardLayout = lazy(() => import('./components/DashboardLayout'));
+const DashboardOverview = lazy(() => import('./pages/dashboard/Overview'));
+const DashboardListings = lazy(() => import('./pages/dashboard/MyListings'));
+const DashboardGroups = lazy(() => import('./pages/dashboard/MyGroups'));
+const DashboardOrders = lazy(() => import('./pages/dashboard/OrderHistory'));
+const DashboardSaved = lazy(() => import('./pages/dashboard/SavedItems'));
+const DashboardSettings = lazy(() => import('./pages/dashboard/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
@@ -64,7 +69,6 @@ export default function App() {
                 <Route path="signup" element={withPageLoader(<Auth />)} />
                 <Route path="forgot-password" element={withPageLoader(<ForgotPassword />)} />
                 <Route path="pricing" element={withPageLoader(<Pricing />)} />
-                <Route path="careers" element={withPageLoader(<Careers />)} />
                 <Route path="blog" element={withPageLoader(<Blog />)} />
                 <Route path="contact" element={withPageLoader(<Contact />)} />
                 <Route path="privacy" element={withPageLoader(<Privacy />)} />
@@ -74,7 +78,14 @@ export default function App() {
                 {/* Protected Routes */}
                 <Route path="marketplace/new" element={withPageLoader(<ProtectedRoute><NewListing /></ProtectedRoute>)} />
                 <Route path="co-subs/new" element={withPageLoader(<ProtectedRoute><NewGroup /></ProtectedRoute>)} />
-                <Route path="dashboard" element={withPageLoader(<ProtectedRoute><Dashboard /></ProtectedRoute>)} />
+                <Route path="dashboard" element={withPageLoader(<ProtectedRoute><DashboardLayout /></ProtectedRoute>)}>
+                  <Route index element={<DashboardOverview />} />
+                  <Route path="listings" element={<DashboardListings />} />
+                  <Route path="groups" element={<DashboardGroups />} />
+                  <Route path="orders" element={<DashboardOrders />} />
+                  <Route path="saved" element={<DashboardSaved />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                </Route>
                 <Route path="profile" element={withPageLoader(<ProtectedRoute><Profile /></ProtectedRoute>)} />
                 <Route path="cart" element={withPageLoader(<ProtectedRoute><Cart /></ProtectedRoute>)} />
                 <Route path="checkout" element={withPageLoader(<ProtectedRoute><Checkout /></ProtectedRoute>)} />

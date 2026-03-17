@@ -30,7 +30,7 @@ export default function Settings() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-6">
       <h3 className="text-xl font-semibold text-gray-900">Profile Settings</h3>
       
       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">

@@ -17,7 +17,7 @@ export default function SavedItems() {
   const savedItems = marketplaceItems.filter(item => favorites.has(item.id));
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
       <h3 className="text-xl font-semibold text-gray-900 mb-6">Saved Items</h3>
       {savedItems.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

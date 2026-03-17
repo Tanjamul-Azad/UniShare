@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: '/UniShare/',
     root: __dirname,
     server: {
       port: 5173,

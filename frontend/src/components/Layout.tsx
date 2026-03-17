@@ -127,17 +127,7 @@ export default function Layout() {
       {/* Main Content - Add top padding to account for fixed header */}
       <main className="flex-1 w-full pt-24 pb-10 flex flex-col">
         <div className={cn("w-full mx-auto", location.pathname === '/' ? "max-w-full px-0" : "max-w-7xl px-4 sm:px-6")}>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 1, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 1, y: -2 }}
-              transition={{ duration: 0.12, ease: 'easeOut' }}
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </main>
 

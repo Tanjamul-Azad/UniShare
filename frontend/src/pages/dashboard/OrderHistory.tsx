@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export default function OrderHistory() {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
       <h3 className="text-xl font-semibold text-gray-900 mb-6">Order History</h3>
       <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
         <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />

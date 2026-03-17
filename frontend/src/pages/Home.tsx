@@ -119,7 +119,7 @@ export default function Home() {
           <p className="text-gray-500">Find exactly what you need for your next semester.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {[
             { title: 'Textbooks', icon: Book, desc: 'Buy and sell used course materials.', link: '/marketplace' },
             { title: 'Stationary', icon: Sparkles, desc: 'Calculators, notebooks, and tools.', link: '/marketplace' },
@@ -131,13 +131,14 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="h-full"
             >
-              <Link to={cat.link} className="group block p-8 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-                <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <cat.icon className="w-6 h-6 text-gray-900" />
+              <Link to={cat.link} className="group flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow transition-all duration-200">
+                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-8 ring-1 ring-gray-100 group-hover:bg-gray-900 transition-colors duration-300">
+                  <cat.icon className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors duration-300" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{cat.title}</h3>
-                <p className="text-gray-500">{cat.desc}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{cat.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed font-medium">{cat.desc}</p>
               </Link>
             </motion.div>
           ))}

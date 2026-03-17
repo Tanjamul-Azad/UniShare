@@ -1,9 +1,10 @@
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import { Users, Package, LayoutDashboard, ShoppingBag, Heart, Settings, LogOut, Camera, User } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useApiQuery } from "../hooks/useApiQuery";
 import { getMarketplaceItems, getSubscriptionGroups, type MarketplaceItem, type SubscriptionGroup } from "../lib/api";
+import PageLoader from "./PageLoader";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -114,7 +115,9 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   );

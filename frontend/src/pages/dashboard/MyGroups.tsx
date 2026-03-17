@@ -17,7 +17,7 @@ export default function MyGroups() {
   const myGroups = subscriptionGroups.filter((group) => group.owner === user?.name);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-900">My Groups</h3>
         <Link to="/co-subs/new" className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">

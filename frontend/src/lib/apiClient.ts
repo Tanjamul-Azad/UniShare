@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Core API Client
  *
@@ -51,6 +52,7 @@ const token = localStorage.getItem('unishare_access_token');
       errorMessage = errData.detail || errData.message || JSON.stringify(errData);
     } catch {
       // Ignore if json parsing fails
+    }
 
     throw new Error(errorMessage);
   }

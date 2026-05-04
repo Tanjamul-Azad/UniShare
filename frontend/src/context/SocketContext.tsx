@@ -35,13 +35,18 @@ interface Notification {
   read: boolean;
   timestamp: string;
   recipientId: string;
+  linkUrl?: string;
 }
 
 interface SocketContextType {
   socket: Socket | null;
   messages: Message[];
   notifications: Notification[];
-  sendMessage: (receiverId: string, content: string, replyToId?: string | null) => void;
+  sendMessage: (
+    receiverId: string,
+    content: string,
+    replyToId?: string | null,
+  ) => void;
   editMessage: (messageId: string, content: string) => void;
   deleteMessage: (messageId: string) => void;
   reactToMessage: (messageId: string, emoji: string) => void;
@@ -99,19 +104,20 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setOnlineUsers(data.onlineUsers);
     });
 
-    newSocket.on(
-      "presence_update",
-      (data: { onlineUsers: string[] }) => {
-        setOnlineUsers(data.onlineUsers);
-      },
-    );
+    newSocket.on("presence_update", (data: { onlineUsers: string[] }) => {
+      setOnlineUsers(data.onlineUsers);
+    });
 
     newSocket.on("receive_message", (msg: Message) => {
       setMessages((prev) => {
         const existingIndex = prev.findIndex((m) => m.id === msg.id);
         if (existingIndex >= 0) {
           const next = [...prev];
-          next[existingIndex] = { ...next[existingIndex], ...msg, status: "sent" };
+          next[existingIndex] = {
+            ...next[existingIndex],
+            ...msg,
+            status: "sent",
+          };
           return next;
         }
         return [...prev, { ...msg, status: "sent" }];
@@ -125,7 +131,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     newSocket.on("message_updated", (msg: Message) => {
       setMessages((prev) =>
-        prev.map((message) => (message.id === msg.id ? { ...message, ...msg } : message)),
+        prev.map((message) =>
+          message.id === msg.id ? { ...message, ...msg } : message,
+        ),
       );
     });
 
@@ -144,7 +152,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     newSocket.on(
       "message_reaction_update",
-      (payload: { messageId: string; reactions: { userId: string; emoji: string }[] }) => {
+      (payload: {
+        messageId: string;
+        reactions: { userId: string; emoji: string }[];
+      }) => {
         setMessages((prev) =>
           prev.map((message) =>
             message.id === payload.messageId
@@ -155,12 +166,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       },
     );
 
-    newSocket.on("typing", (payload: { senderId: string; isTyping: boolean }) => {
-      setTypingByUserId((prev) => ({
-        ...prev,
-        [payload.senderId]: payload.isTyping,
-      }));
-    });
+    newSocket.on(
+      "typing",
+      (payload: { senderId: string; isTyping: boolean }) => {
+        setTypingByUserId((prev) => ({
+          ...prev,
+          [payload.senderId]: payload.isTyping,
+        }));
+      },
+    );
 
     newSocket.on(
       "messages_read",
@@ -179,7 +193,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     newSocket.on("receive_notification", (notif: Notification) => {
       setNotifications((prev) => [...prev, notif]);
       // Avoid toasting messages if the user prefers ChatHead, but let's toast all by default.
-      if (notif.type !== 'message') {
+      if (notif.type !== "message") {
         info(notif.message, notif.title);
       }
     });

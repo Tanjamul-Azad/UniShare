@@ -14,8 +14,10 @@ router.post("/", requireAuth, (req: Request, res: Response) => {
   try {
     const buyerId = req.user!.id;
 
-    if (req.user?.verificationStatus !== 'verified') {
-      res.status(403).json({ detail: "Only verified users can make purchases." });
+    if (req.user?.verificationStatus !== "verified") {
+      res
+        .status(403)
+        .json({ detail: "Only verified users can make purchases." });
       return;
     }
 
@@ -161,13 +163,22 @@ router.get("/sales", requireAuth, (req: Request, res: Response) => {
 router.get("/:id", requireAuth, (req: Request, res: Response) => {
   try {
     const order = db
-      .prepare(`
+      .prepare(
+        `
         SELECT o.*, u.name as buyer_name 
         FROM orders o 
         JOIN users u ON u.id = o.buyer_id 
-        WHERE o.id = ? AND o.buyer_id = ?
-      `)
-      .get(req.params.id, req.user!.id) as any;
+        WHERE o.id = ? AND (
+          o.buyer_id = ?
+          OR EXISTS (
+            SELECT 1 FROM order_items oi
+            JOIN marketplace_items m ON m.id = oi.item_id
+            WHERE oi.order_id = o.id AND m.seller_id = ?
+          )
+        )
+      `,
+      )
+      .get(req.params.id, req.user!.id, req.user!.id) as any;
     if (!order) {
       res.status(404).json({ detail: "Order not found" });
       return;
@@ -184,7 +195,7 @@ router.get("/:id", requireAuth, (req: Request, res: Response) => {
       )
       .all(req.params.id) as any[];
 
-    res.json({ 
+    res.json({
       id: order.id,
       buyerId: order.buyer_id,
       buyerName: order.buyer_name,
@@ -192,7 +203,7 @@ router.get("/:id", requireAuth, (req: Request, res: Response) => {
       fee: order.fee,
       status: order.status,
       createdAt: order.created_at,
-      items 
+      items,
     });
   } catch (err: any) {
     res.status(500).json({ detail: err.message });
@@ -200,76 +211,90 @@ router.get("/:id", requireAuth, (req: Request, res: Response) => {
 });
 
 // PATCH /api/orders/items/:id/confirm — seller confirms an item
-router.patch("/items/:id/confirm", requireAuth, (req: Request, res: Response) => {
-  try {
-    const sellerId = req.user!.id;
-    const { id } = req.params;
+router.patch(
+  "/items/:id/confirm",
+  requireAuth,
+  (req: Request, res: Response) => {
+    try {
+      const sellerId = req.user!.id;
+      const { id } = req.params;
 
-
-    // Verify this seller owns the item in this order
-    const item = db.prepare(`
+      // Verify this seller owns the item in this order
+      const item = db
+        .prepare(
+          `
       SELECT oi.*, m.title, o.buyer_id, u.name as seller_name
       FROM order_items oi
       JOIN marketplace_items m ON m.id = oi.item_id
       JOIN orders o ON o.id = oi.order_id
       JOIN users u ON u.id = m.seller_id
       WHERE oi.id = ? AND m.seller_id = ?
-    `).get(id, sellerId) as any;
+    `,
+        )
+        .get(id, sellerId) as any;
 
-    if (!item) {
-      res.status(404).json({ detail: "Order item not found or you don't have permission." });
-      return;
-    }
+      if (!item) {
+        res
+          .status(404)
+          .json({
+            detail: "Order item not found or you don't have permission.",
+          });
+        return;
+      }
 
-    const { note, status } = req.body;
-    const newStatus = status || 'confirmed';
+      const { note, status } = req.body;
+      const newStatus = status || "confirmed";
 
-    db.prepare(`
+      db.prepare(
+        `
       UPDATE order_items 
       SET status = ?, seller_note = ? 
       WHERE id = ?
-    `).run(newStatus, note || item.seller_note || null, id);
+    `,
+      ).run(newStatus, note || item.seller_note || null, id);
 
-    // Notify Buyer
-    const notifId = crypto.randomUUID();
-    const timestamp = new Date().toISOString();
-    const statusMsg = newStatus === 'shipped' ? 'shipped your order' : 
-                      newStatus === 'delivered' ? 'marked your order as delivered' :
-                      'confirmed your order';
-    
-    const message = `${item.seller_name} has ${statusMsg} for "${item.title}".`;
-    
-    const notifTitle = newStatus === 'shipped' ? 'Order Shipped!' : 
-                       newStatus === 'delivered' ? 'Order Delivered!' :
-                       'Order Confirmed!';
+      // Notify Buyer
+      const notifId = crypto.randomUUID();
+      const timestamp = new Date().toISOString();
+      const statusMsg =
+        newStatus === "shipped"
+          ? "shipped your order"
+          : newStatus === "delivered"
+            ? "marked your order as delivered"
+            : "confirmed your order";
 
-    db.prepare(`
+      const message = `${item.seller_name} has ${statusMsg} for "${item.title}".`;
+
+      const notifTitle =
+        newStatus === "shipped"
+          ? "Order Shipped!"
+          : newStatus === "delivered"
+            ? "Order Delivered!"
+            : "Order Confirmed!";
+
+      db.prepare(
+        `
       INSERT INTO notifications (id, recipient_id, type, title, message, link_url)
       VALUES (?, ?, 'order_update', ?, ?, ?)
-    `).run(
-      notifId,
-      item.buyer_id,
-      notifTitle,
-      message,
-      `/profile?tab=orders`
-    );
+    `,
+      ).run(notifId, item.buyer_id, notifTitle, message, `/dashboard/orders`);
 
-    emitNotification({
-      id: notifId,
-      recipientId: item.buyer_id,
-      type: "order_update",
-      title: notifTitle,
-      message,
-      timestamp,
-      read: false,
-    });
+      emitNotification({
+        id: notifId,
+        recipientId: item.buyer_id,
+        type: "order_update",
+        title: notifTitle,
+        message,
+        timestamp,
+        read: false,
+        linkUrl: `/dashboard/orders`,
+      });
 
-    res.json({ success: true, status: newStatus });
-  } catch (err: any) {
-    res.status(500).json({ detail: err.message });
-  }
-});
-
-
+      res.json({ success: true, status: newStatus });
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  },
+);
 
 export default router;

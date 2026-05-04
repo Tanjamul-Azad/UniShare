@@ -26,6 +26,7 @@ export function emitNotification(payload: {
   message: string;
   timestamp: string;
   read?: boolean | number;
+  linkUrl?: string;
 }) {
   if (!ioInstance) return;
   ioInstance.to(payload.recipientId).emit("receive_notification", {
@@ -36,6 +37,7 @@ export function emitNotification(payload: {
     read: payload.read ?? false,
     timestamp: payload.timestamp,
     recipientId: payload.recipientId,
+    linkUrl: payload.linkUrl,
   });
 }
 
@@ -121,7 +123,7 @@ export function initSocket(io: Server) {
       .prepare(
         `
       SELECT id, recipient_id AS recipientId, type, title, message, read,
-             created_at AS timestamp
+             created_at AS timestamp, link_url AS linkUrl
       FROM notifications
       WHERE recipient_id = ?
       ORDER BY created_at DESC
@@ -327,8 +329,14 @@ export function initSocket(io: Server) {
           })),
         };
 
-        io.to(messageRow.receiver_id).emit("message_reaction_update", updatePayload);
-        io.to(messageRow.sender_id).emit("message_reaction_update", updatePayload);
+        io.to(messageRow.receiver_id).emit(
+          "message_reaction_update",
+          updatePayload,
+        );
+        io.to(messageRow.sender_id).emit(
+          "message_reaction_update",
+          updatePayload,
+        );
       },
     );
 

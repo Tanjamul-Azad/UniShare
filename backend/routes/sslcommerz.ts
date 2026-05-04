@@ -8,7 +8,8 @@ import { emitNotification } from "../socket/index.js";
 const router = Router();
 
 const store_id = process.env.SSLCOMMERZ_STORE_ID || "test67c71e227038e";
-const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD || "test67c71e227038e@ssl";
+const store_passwd =
+  process.env.SSLCOMMERZ_STORE_PASSWORD || "test67c71e227038e@ssl";
 const is_live = process.env.SSLCOMMERZ_IS_LIVE === "true";
 
 // Dynamically determine BASE_URL if not in env
@@ -27,9 +28,11 @@ router.post("/init", requireAuth, async (req: Request, res: Response) => {
   console.log(`[SSLCommerz] Starting /init for user: ${buyerId}`);
 
   try {
-    if (req.user?.verificationStatus !== 'verified') {
+    if (req.user?.verificationStatus !== "verified") {
       console.log(`[SSLCommerz] Blocked: User ${buyerId} is not verified.`);
-      res.status(403).json({ detail: "Only verified users can make purchases." });
+      res
+        .status(403)
+        .json({ detail: "Only verified users can make purchases." });
       return;
     }
 
@@ -57,25 +60,39 @@ router.post("/init", requireAuth, async (req: Request, res: Response) => {
     );
     const fee = Number((subtotal * FEE_RATE).toFixed(2));
     const total = Number((subtotal + fee).toFixed(2));
-    console.log(`[SSLCommerz] Subtotal: ${subtotal}, Fee: ${fee}, Total: ${total}`);
+    console.log(
+      `[SSLCommerz] Subtotal: ${subtotal}, Fee: ${fee}, Total: ${total}`,
+    );
 
-    const tran_id = "UNI-" + Math.random().toString(36).substring(2, 10).toUpperCase() + Date.now().toString().slice(-4);
+    const tran_id =
+      "UNI-" +
+      Math.random().toString(36).substring(2, 10).toUpperCase() +
+      Date.now().toString().slice(-4);
     console.log(`[SSLCommerz] Generated Tran ID: ${tran_id}`);
 
     // MOCK GATEWAY LOGIC
-    if (!process.env.SSLCOMMERZ_STORE_ID || process.env.SSLCOMMERZ_STORE_ID === "test67c71e227038e" || process.env.SSLCOMMERZ_STORE_ID === "testbox") {
+    if (
+      !process.env.SSLCOMMERZ_STORE_ID ||
+      process.env.SSLCOMMERZ_STORE_ID === "test67c71e227038e" ||
+      process.env.SSLCOMMERZ_STORE_ID === "testbox"
+    ) {
       console.log(`[SSLCommerz] Entering Mock Mode`);
       db.prepare(
-        `INSERT INTO orders (id, buyer_id, total_amount, fee, status, tran_id) VALUES (?, ?, ?, ?, 'pending', ?)`
+        `INSERT INTO orders (id, buyer_id, total_amount, fee, status, tran_id) VALUES (?, ?, ?, ?, 'pending', ?)`,
       ).run(tran_id, buyerId, total, fee, tran_id);
 
       for (const item of cartItems) {
         db.prepare(
-          `INSERT INTO order_items (id, order_id, item_id, price_at_purchase) VALUES (?, ?, ?, ?)`
-        ).run(Math.random().toString(36).substring(2, 15), tran_id, item.id, item.price ?? 0);
+          `INSERT INTO order_items (id, order_id, item_id, price_at_purchase) VALUES (?, ?, ?, ?)`,
+        ).run(
+          Math.random().toString(36).substring(2, 15),
+          tran_id,
+          item.id,
+          item.price ?? 0,
+        );
       }
 
-      const preferredMethod = req.body.method || 'card';
+      const preferredMethod = req.body.method || "card";
       const mockUrl = `${getBaseUrl(req)}/#/mock-gateway?tran_id=${tran_id}&total=${total}&method=${preferredMethod}`;
       console.log(`[SSLCommerz] Mock URL: ${mockUrl}`);
       res.json({ url: mockUrl });
@@ -110,30 +127,46 @@ router.post("/init", requireAuth, async (req: Request, res: Response) => {
     };
 
     const SSLCP = (SSLCommerzPayment as any).default || SSLCommerzPayment;
-    if (typeof SSLCP !== 'function') {
-      throw new Error("SSLCommerzPayment is not a constructor. Check package version and import.");
+    if (typeof SSLCP !== "function") {
+      throw new Error(
+        "SSLCommerzPayment is not a constructor. Check package version and import.",
+      );
     }
 
     const sslcz = new (SSLCP as any)(store_id, store_passwd, is_live);
-    
+
     console.log(`[SSLCommerz] Calling sslcz.init...`);
     const apiResponse = await sslcz.init(data);
-    console.log("[SSLCommerz] API Response:", JSON.stringify(apiResponse, null, 2));
-    
+    console.log(
+      "[SSLCommerz] API Response:",
+      JSON.stringify(apiResponse, null, 2),
+    );
+
     if (apiResponse?.GatewayPageURL) {
       db.prepare(
-        `INSERT INTO orders (id, buyer_id, total_amount, fee, status, tran_id) VALUES (?, ?, ?, ?, 'pending', ?)`
+        `INSERT INTO orders (id, buyer_id, total_amount, fee, status, tran_id) VALUES (?, ?, ?, ?, 'pending', ?)`,
       ).run(tran_id, buyerId, total, fee, tran_id);
 
       for (const item of cartItems) {
         db.prepare(
-          `INSERT INTO order_items (id, order_id, item_id, price_at_purchase) VALUES (?, ?, ?, ?)`
-        ).run(Math.random().toString(36).substring(2, 15), tran_id, item.id, item.price ?? 0);
+          `INSERT INTO order_items (id, order_id, item_id, price_at_purchase) VALUES (?, ?, ?, ?)`,
+        ).run(
+          Math.random().toString(36).substring(2, 15),
+          tran_id,
+          item.id,
+          item.price ?? 0,
+        );
       }
 
       res.json({ url: apiResponse.GatewayPageURL });
     } else {
-      res.status(400).json({ detail: "Failed to initiate payment: " + (apiResponse?.failedreason || "Unknown error") });
+      res
+        .status(400)
+        .json({
+          detail:
+            "Failed to initiate payment: " +
+            (apiResponse?.failedreason || "Unknown error"),
+        });
     }
   } catch (err: any) {
     console.error("[SSLCommerz] CRITICAL ERROR:", err);
@@ -144,7 +177,9 @@ router.post("/init", requireAuth, async (req: Request, res: Response) => {
 // POST /api/payment/success
 router.post("/success", async (req: Request, res: Response) => {
   const { tran_id, val_id } = req.body;
-  console.log(`[Payment] Success callback received. Tran: ${tran_id}, Val: ${val_id}`);
+  console.log(
+    `[Payment] Success callback received. Tran: ${tran_id}, Val: ${val_id}`,
+  );
 
   try {
     let validation;
@@ -153,46 +188,69 @@ router.post("/success", async (req: Request, res: Response) => {
       validation = { status: "VALID" };
     } else {
       console.log(`[Payment] Validating real payment with SSLCommerz...`);
-      const sslcz = new (SSLCommerzPayment as any)(store_id, store_passwd, is_live);
+      const sslcz = new (SSLCommerzPayment as any)(
+        store_id,
+        store_passwd,
+        is_live,
+      );
       validation = await sslcz.validate({ val_id });
-      console.log(`[Payment] SSLCommerz Validation Status: ${validation.status}`);
+      console.log(
+        `[Payment] SSLCommerz Validation Status: ${validation.status}`,
+      );
     }
 
-    if (validation.status === "VALID" || validation.status === "AUTHENTICATED") {
-      console.log(`[Payment] Validation successful. Proceeding with order fulfillment...`);
+    if (
+      validation.status === "VALID" ||
+      validation.status === "AUTHENTICATED"
+    ) {
+      console.log(
+        `[Payment] Validation successful. Proceeding with order fulfillment...`,
+      );
       // 1. Update main order status
       db.prepare(
-        "UPDATE orders SET status = 'paid', ssl_status = ?, val_id = ? WHERE id = ?"
+        "UPDATE orders SET status = 'paid', ssl_status = ?, val_id = ? WHERE id = ?",
       ).run(validation.status, val_id, tran_id);
 
       // 2. Set items to 'processing'
-      db.prepare("UPDATE order_items SET status = 'processing' WHERE order_id = ?").run(tran_id);
+      db.prepare(
+        "UPDATE order_items SET status = 'processing' WHERE order_id = ?",
+      ).run(tran_id);
 
       // 3. Notify Sellers (Items stay active as sellers may have more pieces)
-      const order = db.prepare("SELECT buyer_id FROM orders WHERE id = ?").get(tran_id) as any;
+      const order = db
+        .prepare("SELECT buyer_id FROM orders WHERE id = ?")
+        .get(tran_id) as any;
       if (order) {
         console.log(`[Payment] Clearing cart for buyer: ${order.buyer_id}`);
-        db.prepare("DELETE FROM cart_items WHERE user_id = ?").run(order.buyer_id);
+        db.prepare("DELETE FROM cart_items WHERE user_id = ?").run(
+          order.buyer_id,
+        );
         console.log(`[Payment] Cart cleared for buyer: ${order.buyer_id}`);
-        
+
         // Fetch unique sellers in this order
-        const sellers = db.prepare(`
+        const sellers = db
+          .prepare(
+            `
           SELECT DISTINCT m.seller_id, m.title, u.name as buyer_name
           FROM order_items oi
           JOIN marketplace_items m ON oi.item_id = m.id
           JOIN orders o ON o.id = oi.order_id
           JOIN users u ON u.id = o.buyer_id
           WHERE oi.order_id = ?
-        `).all(tran_id) as any[];
+        `,
+          )
+          .all(tran_id) as any[];
 
         for (const s of sellers) {
           const notifId = crypto.randomUUID();
           const timestamp = new Date().toISOString();
           const message = `${s.buyer_name} purchased your item: ${s.title}. Please confirm the order.`;
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO notifications (id, recipient_id, type, title, message, link_url)
             VALUES (?, ?, 'order_update', 'New Sale!', ?, ?)
-          `).run(notifId, s.seller_id, message, "/dashboard?tab=sales");
+          `,
+          ).run(notifId, s.seller_id, message, "/dashboard");
 
           emitNotification({
             id: notifId,
@@ -202,13 +260,16 @@ router.post("/success", async (req: Request, res: Response) => {
             message,
             timestamp,
             read: false,
+            linkUrl: `/dashboard`,
           });
         }
       }
 
       res.redirect(`${getBaseUrl(req)}/#/order-success?orderId=${tran_id}`);
     } else {
-      res.redirect(`${getBaseUrl(req)}/#/checkout?error=Payment validation failed`);
+      res.redirect(
+        `${getBaseUrl(req)}/#/checkout?error=Payment validation failed`,
+      );
     }
   } catch (err) {
     console.error("[Payment] Error in success route:", err);
@@ -219,7 +280,9 @@ router.post("/success", async (req: Request, res: Response) => {
 // POST /api/payment/fail
 router.post("/fail", (req: Request, res: Response) => {
   const { tran_id } = req.body;
-  res.redirect(`${getBaseUrl(req)}/#/checkout?error=Payment failed&tran_id=${tran_id}`);
+  res.redirect(
+    `${getBaseUrl(req)}/#/checkout?error=Payment failed&tran_id=${tran_id}`,
+  );
 });
 
 // POST /api/payment/cancel

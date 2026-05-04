@@ -76,7 +76,10 @@ CREATE TABLE IF NOT EXISTS orders (
   buyer_id     TEXT NOT NULL REFERENCES users(id),
   total_amount REAL NOT NULL,
   fee          REAL NOT NULL,
-  status       TEXT NOT NULL DEFAULT 'paid',
+  status       TEXT NOT NULL DEFAULT 'processing',
+  ssl_status   TEXT,
+  val_id       TEXT,
+  tran_id      TEXT,
   created_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -84,7 +87,9 @@ CREATE TABLE IF NOT EXISTS order_items (
   id                TEXT PRIMARY KEY,
   order_id          TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   item_id           TEXT NOT NULL REFERENCES marketplace_items(id),
-  price_at_purchase REAL NOT NULL
+  price_at_purchase REAL NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'processing',
+  seller_note       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS favorites (

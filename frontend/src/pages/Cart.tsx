@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Trash2, ArrowRight } from 'lucide-react';
+import { Trash2, ArrowRight, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import { getCartPreviewItems, removeFromCart, type MarketplaceItem } from '../lib/api';
 import { useApiQuery } from '../hooks/useApiQuery';
 import QueryErrorState from '../components/QueryErrorState';
@@ -43,6 +44,7 @@ export default function Cart() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <BackButton fallback="/marketplace" label="Back to Marketplace" className="mb-6" />
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900 mb-8">Your Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -65,8 +67,14 @@ export default function Cart() {
                   <div>
                     <h3 className="font-medium text-gray-900 line-clamp-1">{item.title}</h3>
                     <p className="text-sm text-gray-500">{item.condition} • {item.seller}</p>
+                    <Link 
+                      to={`/inbox?participant=${item.sellerId}`}
+                      className="mt-1 flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-500"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" /> Message Seller
+                    </Link>
                   </div>
-                  <span className="font-semibold text-gray-900">${item.price.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-900">৳{item.price.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-end">
                   <button
@@ -87,18 +95,18 @@ export default function Cart() {
           <div className="space-y-3 text-sm text-gray-600 mb-6">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>৳{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Platform Fee (5%)</span>
-              <span>${(subtotal * 0.05).toFixed(2)}</span>
+              <span>৳{(subtotal * 0.05).toFixed(2)}</span>
             </div>
             <div className="border-t border-gray-100 pt-3 flex justify-between font-semibold text-gray-900 text-lg">
               <span>Total</span>
-              <span>${(subtotal * 1.05).toFixed(2)}</span>
+              <span>৳{(subtotal * 1.05).toFixed(2)}</span>
             </div>
           </div>
-          <Link to="/checkout" className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+          <Link to="/checkout" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
             Proceed to Checkout <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

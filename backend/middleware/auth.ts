@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import db from "../db/index.js";
 
 export interface JwtPayload {
   id: string;
@@ -36,7 +37,21 @@ export function requireAuth(
     return;
   }
   try {
-    req.user = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
+    const payload = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
+    // Fetch fresh user data to prevent stale JWT bugs (e.g. verification status changes)
+    const dbUser = db.prepare("SELECT role, verification_status, name FROM users WHERE id = ?").get(payload.id) as any;
+    
+    if (!dbUser) {
+      res.status(401).json({ detail: "User no longer exists" });
+      return;
+    }
+
+    req.user = {
+      ...payload,
+      role: dbUser.role,
+      verificationStatus: dbUser.verification_status,
+      name: dbUser.name
+    };
     next();
   } catch {
     res.status(401).json({ detail: "Invalid or expired token" });

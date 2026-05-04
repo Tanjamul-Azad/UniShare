@@ -1,5 +1,6 @@
+import React from 'react';
 import { motion } from 'motion/react';
-import { Bell, ChevronRight, Inbox, LayoutDashboard, Package, ShoppingBag, Star, Users, User } from 'lucide-react';
+import { Bell, ChevronRight, Inbox, LayoutDashboard, Package, ShoppingBag, Star, Users, User, MessageSquare, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -25,6 +26,12 @@ export default function Dashboard() {
     errorMessage: 'Could not load your subscription data.',
   });
 
+  const { data: sales = [], refetch: refetchSales } = useApiQuery<any[]>({
+    queryKey: ['sales'],
+    queryFn: () => import('../lib/api').then(m => m.getSales()),
+    errorMessage: 'Could not load sales data.',
+  });
+
   const isDashboardLoading = isMarketplaceLoading || isGroupsLoading;
 
   const myListings = marketplaceItems.filter((item) => item.seller === user?.name);
@@ -38,6 +45,12 @@ export default function Dashboard() {
       to: '/profile?tab=listings',
     },
     {
+      label: 'My Sales',
+      value: sales.length,
+      icon: ShoppingBag,
+      to: '#sales',
+    },
+    {
       label: 'My Groups',
       value: myGroups.length,
       icon: Users,
@@ -48,12 +61,6 @@ export default function Dashboard() {
       value: favorites.size,
       icon: Star,
       to: '/profile?tab=saved',
-    },
-    {
-      label: 'Unread Alerts',
-      value: unreadNotificationsCount,
-      icon: Bell,
-      to: '/notifications',
     },
   ];
 
@@ -335,7 +342,142 @@ export default function Dashboard() {
             </motion.div>
           </div>
         </div>
+
+        {/* ── Sales Management ── */}
+        {sales.length > 0 && (
+          <motion.div
+            id="sales"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+          >
+            <div className="bg-gray-900 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-indigo-400" /> Incoming Sales
+              </h2>
+              <span className="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                {sales.filter(s => s.status === 'processing').length} Action Required
+              </span>
+            </div>
+            
+            <div className="divide-y divide-gray-100">
+              {sales.map((sale) => (
+                <SaleItem key={sale.id} sale={sale} onConfirm={refetchSales} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
       </div>
     </section>
+  );
+}
+
+function SaleItem({ sale, onConfirm }: { sale: any, onConfirm: () => void }) {
+  const [confirming, setConfirming] = React.useState(false);
+  const [note, setNote] = React.useState('');
+  const [isConfirmingAction, setIsConfirmingAction] = React.useState(false);
+
+  const handleConfirm = async () => {
+    setIsConfirmingAction(true);
+    try {
+      const { confirmOrderItem } = await import('../lib/api');
+      await confirmOrderItem(sale.id, note);
+      onConfirm();
+      setConfirming(false);
+    } finally {
+      setIsConfirmingAction(false);
+    }
+  };
+
+  return (
+    <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-gray-50/50 transition-colors">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+          {sale.image_url ? (
+            <img src={sale.image_url} alt={sale.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300"><Package className="w-6 h-6" /></div>
+          )}
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">{sale.title}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              sale.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }`}>
+              {sale.status}
+            </span>
+            <span className="text-xs text-gray-400">•</span>
+            <p className="text-xs text-gray-500">Buyer: <span className="font-semibold text-gray-700">{sale.buyer_name}</span></p>
+          </div>
+          {sale.seller_note && (
+            <p className="mt-2 text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg italic">
+              Note: {sale.seller_note}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Link 
+          to={`/inbox?participant=${sale.buyer_id}`}
+          className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 px-4 py-2"
+        >
+          <MessageSquare className="w-4 h-4" /> Message
+        </Link>
+        <Link 
+          to={`/order-success?tran_id=${sale.order_id}`}
+          className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 px-4 py-2"
+        >
+          <FileText className="w-4 h-4" /> Invoice
+        </Link>
+        {sale.status === 'processing' && (
+          <button
+            onClick={() => setConfirming(true)}
+            className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            Confirm Order
+          </button>
+        )}
+      </div>
+
+      {confirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl"
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Sale</h3>
+            <p className="text-sm text-gray-500 mb-6">Confirm that you've received payment or coordinated with the buyer for "{sale.title}".</p>
+            
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Optional Note to Buyer</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. Handoff tomorrow at 2PM in front of Annex."
+              className="w-full rounded-2xl border border-gray-200 p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none mb-6 min-h-[100px] resize-none"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirming(false)}
+                className="flex-1 py-3 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={isConfirmingAction}
+                onClick={handleConfirm}
+                className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isConfirmingAction ? 'Confirming...' : 'Confirm Order'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
   );
 }

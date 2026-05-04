@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Users, Music, Tv, BookOpen, FileText, PenTool, Key } from 'lucide-react';
+import { Plus, Users, Music, Tv, BookOpen, FileText, PenTool, Key, BadgeCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { getSubscriptionGroups, type SubscriptionGroup } from '../lib/api';
@@ -158,7 +158,7 @@ export default function CoSubs() {
                       <Icon className="w-6 h-6" />
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-lg text-gray-900">${group.pricePerMonth.toFixed(2)}</div>
+                      <div className="font-semibold text-lg text-gray-900">৳{group.pricePerMonth.toFixed(2)}</div>
                       <div className="text-xs text-gray-500">per month</div>
                     </div>
                   </div>
@@ -175,7 +175,12 @@ export default function CoSubs() {
                         {isSublet ? 'Sublet' : 'Share'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 mb-6">Listed by {group.owner}</p>
+                    <p className="text-sm text-gray-500 mb-6 flex items-center gap-1">
+                      Listed by {group.owner}
+                      {group.isVerified && (
+                        <BadgeCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-50" />
+                      )}
+                    </p>
                   </div>
 
                   <div className="space-y-3 mt-auto relative z-10">

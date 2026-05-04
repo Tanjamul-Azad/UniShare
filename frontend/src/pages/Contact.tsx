@@ -24,6 +24,10 @@ export default function Contact() {
           title: 'Product Feedback',
           body: 'Share your ideas for checkout, chat, profile tools, and discovery. Product suggestions from active users directly influence our roadmap.',
         },
+        {
+          title: 'Administrative Support',
+          body: 'For trust, safety, and official inquiries, you can reach the administrator directly at i.m.tanjamul@gmail.com.',
+        },
       ]}
       ctaLabel="Back to Profile"
       ctaTo="/profile"

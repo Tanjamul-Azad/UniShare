@@ -4,74 +4,66 @@ import {
   REVIEWS,
   MOCK_USERS,
   VERIFICATION_REQUESTS,
-  type MockUser as MockUserData,
 } from "../data/mock";
 import { apiClient } from "./apiClient";
+import {
+  MarketplaceItem,
+  SubscriptionGroup,
+  Review,
+  MockUser,
+  VerificationRequest,
+  SellerProfileData,
+  CreateMarketplaceListingInput,
+  CreateSubscriptionGroupInput,
+  VerificationSubmissionInput,
+  LoginInput,
+  RegisterInput,
+  OrderSummary,
+  OrderItem,
+  OrderDetail,
+  ReviewEntry,
+  DashboardStats,
+  NotificationEntry,
+  AdminStats,
+  BorrowRequest,
+  TradeProposal,
+} from "./types";
+
+export type {
+  MarketplaceItem,
+  SubscriptionGroup,
+  Review,
+  MockUser,
+  VerificationRequest,
+  SellerProfileData,
+  CreateMarketplaceListingInput,
+  CreateSubscriptionGroupInput,
+  VerificationSubmissionInput,
+  LoginInput,
+  RegisterInput,
+  OrderSummary,
+  OrderItem,
+  OrderDetail,
+  ReviewEntry,
+  DashboardStats,
+  NotificationEntry,
+  AdminStats,
+  BorrowRequest,
+  TradeProposal,
+};
 
 /**
  * FEATURE FLAG: set USE_MOCK to false when connecting to the backend.
  */
 const USE_MOCK = false;
 
-export type MarketplaceItem = (typeof MARKETPLACE_ITEMS)[number];
-export type SubscriptionGroup = (typeof SUBSCRIPTION_GROUPS)[number];
-export type Review = (typeof REVIEWS)[number];
-export type MockUser = MockUserData;
-export type VerificationRequest = (typeof VERIFICATION_REQUESTS)[number];
-
-export type SellerProfileData = {
-  sellerId: string;
-  sellerName: string;
-  sellerRating: number;
-  reviewsCount: number;
-  sellerLastActive?: string;
-  items: MarketplaceItem[];
-};
-
-export type CreateMarketplaceListingInput = {
-  title: string;
-  category: string;
-  listingType: "sell" | "share" | "barter";
-  condition: string;
-  description: string;
-  price?: number;
-  exchangeFor?: string;
-};
-
-export type CreateSubscriptionGroupInput = {
-  service: string;
-  listingType: "share" | "sublet";
-  monthlyCost: number;
-  totalSpots?: number;
-  duration?: number;
-  description: string;
-};
-
-export type VerificationSubmissionInput = {
-  name: string;
-  email: string;
-  uiuEmail: string;
-  uiuIdNumber: string;
-  uiuIdImage: string;
-};
-
 const wait = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
 // ── Auth functions (always hit the real backend) ──────────────────────────────
 
-export type LoginInput = { email: string; password: string };
-export type RegisterInput = {
-  name: string;
-  email: string;
-  password: string;
-  uiuEmail?: string;
-  uiuIdNumber?: string;
-  uiuIdImage?: string;
-};
-
 export async function loginUser(
-  input: LoginInput,
+  input: LoginInput & { requiredRole?: "user" | "admin" },
 ): Promise<{ user: MockUser; token: string }> {
   return apiClient<{ user: MockUser; token: string }>("/auth/login", {
     data: input,
@@ -86,13 +78,34 @@ export async function registerUser(
   });
 }
 
+export async function socialLogin(
+  provider: string,
+  idToken: string,
+  requiredRole?: "user" | "admin",
+): Promise<{ user: MockUser; token: string }> {
+  return apiClient<{ user: MockUser; token: string }>("/auth/social-login", {
+    data: { provider, idToken, requiredRole },
+  });
+}
+
+export async function updatePassword(password: string): Promise<{ message: string }> {
+  return apiClient<{ message: string }>("/auth/update-password", {
+    method: "POST",
+    data: { password },
+  });
+}
+
+export async function getCurrentUser(): Promise<MockUser> {
+  return apiClient<MockUser>("/auth/me");
+}
+
 export async function getMarketplaceItems(): Promise<MarketplaceItem[]> {
   if (!USE_MOCK) {
     return apiClient<MarketplaceItem[]>("/marketplace/");
   }
 
   await wait();
-  return MARKETPLACE_ITEMS;
+  return MARKETPLACE_ITEMS as any;
 }
 
 export async function getMarketplaceItemById(
@@ -103,7 +116,7 @@ export async function getMarketplaceItemById(
   }
 
   await wait();
-  return MARKETPLACE_ITEMS.find((item) => item.id === id);
+  return MARKETPLACE_ITEMS.find((item) => item.id === id) as any;
 }
 
 export async function getMarketplaceItemsBySellerId(
@@ -114,7 +127,7 @@ export async function getMarketplaceItemsBySellerId(
   }
 
   await wait();
-  return MARKETPLACE_ITEMS.filter((item) => item.sellerId === sellerId);
+  return MARKETPLACE_ITEMS.filter((item) => item.sellerId === sellerId) as any;
 }
 
 export async function getSellerProfileById(
@@ -138,23 +151,20 @@ export async function getSellerProfileById(
     sellerRating: primary.sellerRating,
     reviewsCount: primary.reviewsCount,
     sellerLastActive: primary.sellerLastActive,
-    items,
+    items: items as any,
   };
 }
 
 export async function getSubscriptionGroups(): Promise<SubscriptionGroup[]> {
   if (!USE_MOCK) {
     const res = await apiClient<any>("/co-subs/");
-    // Normalize different shapes: backend returns an array, but some proxies
-    // or legacy responses may wrap the array in an object (e.g. { value: [...] }).
     if (Array.isArray(res)) return res as SubscriptionGroup[];
     if (res && Array.isArray(res.value)) return res.value as SubscriptionGroup[];
-    // Fallback: if the payload contains a Count and a value property, return value
     throw new Error("Unexpected response shape from /co-subs/");
   }
 
   await wait();
-  return SUBSCRIPTION_GROUPS;
+  return SUBSCRIPTION_GROUPS as any;
 }
 
 export async function getSubscriptionGroupById(
@@ -165,7 +175,7 @@ export async function getSubscriptionGroupById(
   }
 
   await wait();
-  return SUBSCRIPTION_GROUPS.find((group) => group.id === id);
+  return SUBSCRIPTION_GROUPS.find((group) => group.id === id) as any;
 }
 
 export async function getCartPreviewItems(): Promise<MarketplaceItem[]> {
@@ -174,7 +184,40 @@ export async function getCartPreviewItems(): Promise<MarketplaceItem[]> {
   }
 
   await wait();
-  return [MARKETPLACE_ITEMS[0], MARKETPLACE_ITEMS[1]];
+  return [MARKETPLACE_ITEMS[0], MARKETPLACE_ITEMS[1]] as any;
+}
+
+export async function updateMarketplaceItem(
+  id: string,
+  input: Partial<CreateMarketplaceListingInput>,
+): Promise<MarketplaceItem> {
+  if (!USE_MOCK) {
+    return apiClient<MarketplaceItem>(`/marketplace/${id}/`, {
+      method: "PUT",
+      data: input,
+    });
+  }
+
+  await wait();
+  const idx = MARKETPLACE_ITEMS.findIndex((item) => item.id === id);
+  if (idx > -1) {
+    (MARKETPLACE_ITEMS[idx] as any) = { ...MARKETPLACE_ITEMS[idx], ...input };
+    return MARKETPLACE_ITEMS[idx] as any;
+  }
+  throw new Error("Item not found");
+}
+
+export async function deleteMarketplaceItem(id: string): Promise<void> {
+  if (!USE_MOCK) {
+    await apiClient<void>(`/marketplace/${id}/`, { method: "DELETE" });
+    return;
+  }
+
+  await wait();
+  const idx = MARKETPLACE_ITEMS.findIndex((item) => item.id === id);
+  if (idx > -1) {
+    MARKETPLACE_ITEMS.splice(idx, 1);
+  }
 }
 
 export async function createMarketplaceListing(
@@ -186,7 +229,7 @@ export async function createMarketplaceListing(
 
   await wait(300);
 
-  const item: MarketplaceItem = {
+  const item: any = {
     id: `${Date.now()}`,
     title: input.title,
     type: input.listingType,
@@ -196,11 +239,12 @@ export async function createMarketplaceListing(
     category: input.category,
     seller: "Account Owner",
     sellerId: "u-current",
+    isVerified: true,
     sellerRating: 4.9,
     reviewsCount: 0,
     description: input.description,
     image:
-      "https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=800&auto=format&fit=crop",
+      input.imageUrl || "https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=800&auto=format&fit=crop",
     sellerLastActive: "Active Now",
   };
 
@@ -217,7 +261,7 @@ export async function createSubscriptionGroup(
 
   await wait(300);
 
-  const group: SubscriptionGroup = {
+  const group: any = {
     id: `${Date.now()}`,
     service: input.service,
     type: input.listingType,
@@ -231,6 +275,8 @@ export async function createSubscriptionGroup(
     totalSpots: input.listingType === "share" ? (input.totalSpots ?? 2) : 1,
     filledSpots: input.listingType === "share" ? 1 : 0,
     owner: "Account Owner",
+    ownerId: "u-current",
+    isVerified: true,
     icon: "Users",
     description: input.description,
     duration: input.listingType === "sublet" ? input.duration : undefined,
@@ -255,7 +301,7 @@ export async function getMockUserByEmail(
     (user) =>
       normalizeEmail(user.email) === normalized ||
       normalizeEmail(user.uiuEmail ?? "") === normalized,
-  );
+  ) as any;
 }
 
 export async function getAllUsers(): Promise<MockUser[]> {
@@ -264,7 +310,40 @@ export async function getAllUsers(): Promise<MockUser[]> {
   }
 
   await wait();
-  return [...MOCK_USERS];
+  return [...MOCK_USERS] as any;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  if (!USE_MOCK) {
+    await apiClient<void>(`/users/${id}`, { method: "DELETE" });
+    return;
+  }
+
+  await wait();
+  const idx = MOCK_USERS.findIndex((u) => u.id === id);
+  if (idx > -1) {
+    MOCK_USERS.splice(idx, 1);
+  }
+}
+
+export async function updateUserRole(
+  id: string,
+  role: "user" | "admin",
+): Promise<MockUser> {
+  if (!USE_MOCK) {
+    return apiClient<MockUser>(`/users/${id}/role`, {
+      method: "PATCH",
+      data: { role },
+    });
+  }
+
+  await wait();
+  const user = MOCK_USERS.find((u) => u.id === id);
+  if (user) {
+    (user as any).role = role;
+    return user as any;
+  }
+  throw new Error("User not found");
 }
 
 export async function submitVerificationRequest(
@@ -293,16 +372,16 @@ export async function submitVerificationRequest(
   const userId = existingUser ? existingUser.id : `u-${Date.now()}`;
   const submittedAt = new Date().toISOString();
 
-  const nextUser: MockUser = {
+  const nextUser: any = {
     id: userId,
     name: input.name,
     email: input.email,
-    role: existingUser?.role ?? "user",
-    isVerified: false,
+    role: (existingUser?.role ?? "user") as "user" | "admin",
     uiuEmail: input.uiuEmail,
     uiuIdNumber: input.uiuIdNumber,
     uiuIdImage: input.uiuIdImage,
     verificationStatus: "pending",
+    isVerified: false,
     verificationSubmittedAt: submittedAt,
     joinedDate:
       existingUser?.joinedDate ??
@@ -324,7 +403,7 @@ export async function submitVerificationRequest(
     MOCK_USERS.unshift({ ...nextUser, isVerified: false });
   }
 
-  const request: VerificationRequest = {
+  const request: any = {
     id: `vr-${Date.now()}`,
     userId,
     name: input.name,
@@ -338,7 +417,7 @@ export async function submitVerificationRequest(
 
   VERIFICATION_REQUESTS.unshift(request);
   return {
-    user: existingIndex >= 0 ? MOCK_USERS[existingIndex] : MOCK_USERS[0],
+    user: existingIndex >= 0 ? (MOCK_USERS[existingIndex] as any) : (MOCK_USERS[0] as any),
     request,
   };
 }
@@ -361,7 +440,7 @@ export async function getVerificationRequests(): Promise<
     return (
       new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
     );
-  });
+  }) as any;
 }
 
 export async function approveVerificationRequest(
@@ -386,19 +465,19 @@ export async function approveVerificationRequest(
     return {};
   }
 
-  request.status = "approved";
-  request.reviewedAt = new Date().toISOString();
-  request.adminNote = adminNote || undefined;
+  (request as any).status = "approved";
+  (request as any).reviewedAt = new Date().toISOString();
+  (request as any).adminNote = adminNote || undefined;
 
-  const user = MOCK_USERS.find((entry) => entry.id === request.userId);
+  const user = MOCK_USERS.find((entry) => entry.id === (request as any).userId);
   if (user) {
-    user.verificationStatus = "verified";
-    user.isVerified = true;
-    user.verificationReviewedAt = request.reviewedAt;
-    user.verificationNote = undefined;
+    (user as any).verificationStatus = "verified";
+    (user as any).isVerified = true;
+    (user as any).verificationReviewedAt = (request as any).reviewedAt;
+    (user as any).verificationNote = undefined;
   }
 
-  return { request, user };
+  return { request: request as any, user: user as any };
 }
 
 export async function rejectVerificationRequest(
@@ -423,81 +502,21 @@ export async function rejectVerificationRequest(
     return {};
   }
 
-  request.status = "rejected";
-  request.reviewedAt = new Date().toISOString();
-  request.adminNote =
+  (request as any).status = "rejected";
+  (request as any).reviewedAt = new Date().toISOString();
+  (request as any).adminNote =
     adminNote || "Please review and resubmit your verification.";
 
-  const user = MOCK_USERS.find((entry) => entry.id === request.userId);
+  const user = MOCK_USERS.find((entry) => entry.id === (request as any).userId);
   if (user) {
-    user.verificationStatus = "rejected";
-    user.isVerified = false;
-    user.verificationReviewedAt = request.reviewedAt;
-    user.verificationNote = request.adminNote;
+    (user as any).verificationStatus = "rejected";
+    (user as any).isVerified = false;
+    (user as any).verificationReviewedAt = (request as any).reviewedAt;
+    (user as any).verificationNote = (request as any).adminNote;
   }
 
-  return { request, user };
+  return { request: request as any, user: user as any };
 }
-
-export type OrderSummary = {
-  id: string;
-  totalAmount: number;
-  fee: number;
-  status: string;
-  createdAt: string;
-  itemCount: number;
-};
-
-export type OrderItem = {
-  id: string;
-  itemId: string;
-  title?: string;
-  type?: string;
-  image?: string;
-  priceAtPurchase: number;
-};
-
-export type OrderDetail = {
-  id: string;
-  totalAmount: number;
-  fee: number;
-  status: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-export type ReviewEntry = {
-  id: string;
-  reviewerId: string;
-  reviewerName: string;
-  reviewerAvatar?: string;
-  sellerId: string;
-  itemId?: string;
-  itemTitle?: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-};
-
-export type BorrowRequest = {
-  id: string;
-  requesterId: string;
-  itemId: string;
-  status: 'pending' | 'approved' | 'rejected' | 'borrowed' | 'returned';
-  message?: string;
-  createdAt: string;
-  reviewedAt?: string;
-};
-
-export type TradeProposal = {
-  id: string;
-  proposerId: string;
-  itemId: string;
-  offerDescription: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  createdAt: string;
-  reviewedAt?: string;
-};
 
 export async function updateUserProfile(
   userId: string,
@@ -513,6 +532,17 @@ export async function updateUserProfile(
   }>,
 ): Promise<MockUser> {
   return apiClient<MockUser>(`/users/${userId}`, { method: "PUT", data: input });
+}
+
+export async function submitVerification(
+  userId: string,
+  input: {
+    uiuEmail: string;
+    uiuIdNumber: string;
+    uiuIdImage: string;
+  },
+): Promise<MockUser> {
+  return apiClient<MockUser>(`/users/${userId}/verify`, { method: "POST", data: input });
 }
 
 export async function addToCart(itemId: string): Promise<void> {
@@ -539,35 +569,96 @@ export async function createOrder(): Promise<{
   }>("/orders/", { method: "POST" });
 }
 
+export async function initiatePayment(method?: string): Promise<{ url: string }> {
+  return apiClient<{ url: string }>("/payment/init", { 
+    method: "POST",
+    data: { method }
+  });
+}
+
 export async function getOrders(): Promise<OrderSummary[]> {
-  const orders = await apiClient<any[]>("/orders/");
+  const orders = await apiClient<
+    {
+      id: string;
+      total_amount?: string | number;
+      totalAmount?: string | number;
+      fee?: string | number;
+      status: string;
+      created_at?: string;
+      createdAt?: string;
+      item_count?: string | number;
+      itemCount?: string | number;
+      items?: {
+        id?: string | null;
+        title?: string | null;
+      }[];
+    }[]
+  >("/orders/");
   return orders.map((order) => ({
     id: order.id,
     totalAmount: Number(order.total_amount ?? order.totalAmount ?? 0),
     fee: Number(order.fee ?? 0),
     status: order.status,
-    createdAt: order.created_at ?? order.createdAt,
+    createdAt: (order.created_at ?? order.createdAt) || new Date().toISOString(),
     itemCount: Number(order.item_count ?? order.itemCount ?? 0),
+    items: (order.items ?? [])
+      .filter((item) => item?.id)
+      .map((item) => ({
+        id: String(item.id),
+        title: item.title ?? undefined,
+        status: (item as any).status,
+        sellerNote: (item as any).sellerNote,
+      })),
   }));
 }
 
 export async function getOrderById(orderId: string): Promise<OrderDetail> {
-  const order = await apiClient<any>(`/orders/${orderId}`);
+  const order = await apiClient<{
+    id: string;
+    total_amount?: string | number;
+    totalAmount?: string | number;
+    fee?: string | number;
+    status: string;
+    created_at?: string;
+    createdAt?: string;
+    items: {
+      id: string;
+      item_id?: string;
+      itemId?: string;
+      title?: string;
+      type?: string;
+      image_url?: string;
+      image?: string;
+      price_at_purchase?: string | number;
+      priceAtPurchase?: string | number;
+    }[];
+  }>(`/orders/${orderId}`);
   return {
     id: order.id,
     totalAmount: Number(order.total_amount ?? order.totalAmount ?? 0),
     fee: Number(order.fee ?? 0),
     status: order.status,
-    createdAt: order.created_at ?? order.createdAt,
-    items: (order.items ?? []).map((item: any) => ({
+    createdAt: (order.created_at ?? order.createdAt) || new Date().toISOString(),
+    items: (order.items ?? []).map((item) => ({
       id: item.id,
-      itemId: item.item_id ?? item.itemId,
+      itemId: (item.item_id ?? item.itemId) || '',
       title: item.title,
       type: item.type,
       image: item.image_url ?? item.image,
       priceAtPurchase: Number(item.price_at_purchase ?? item.priceAtPurchase ?? 0),
     })),
   };
+}
+
+export async function getSales(): Promise<any[]> {
+  return apiClient<any[]>("/orders/sales");
+}
+
+export async function confirmOrderItem(itemId: string, note?: string): Promise<void> {
+  await apiClient<void>(`/orders/items/${itemId}/confirm`, {
+    method: "PATCH",
+    data: { note },
+  });
 }
 
 export async function getReviewsBySellerId(
@@ -627,4 +718,29 @@ export async function submitTradeProposal(
     method: "POST",
     data: { itemId, offerDescription },
   });
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return apiClient<DashboardStats>("/dashboard/stats");
+}
+
+export async function getNotificationsREST(
+  limit = 50,
+  offset = 0,
+): Promise<{ notifications: NotificationEntry[]; total: number }> {
+  return apiClient<{ notifications: NotificationEntry[]; total: number }>(
+    `/notifications/?limit=${limit}&offset=${offset}`,
+  );
+}
+
+export async function markNotificationReadREST(id: string): Promise<void> {
+  await apiClient<void>(`/notifications/${id}/read`, { method: "PATCH" });
+}
+
+export async function markAllNotificationsReadREST(): Promise<void> {
+  await apiClient<void>("/notifications/read-all", { method: "PATCH" });
+}
+
+export async function getAdminStats(): Promise<AdminStats> {
+  return apiClient<AdminStats>("/admin/stats");
 }

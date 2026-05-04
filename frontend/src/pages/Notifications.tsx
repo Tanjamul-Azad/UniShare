@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Bell, CheckCircle2, MessageSquare, Package, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 import { useSocket } from '../context/SocketContext';
 import { getNotificationActionLabel, getNotificationTarget } from '../lib/notificationRouting';
 
@@ -65,6 +66,7 @@ export default function Notifications() {
           transition={{ duration: 0.3 }}
           className="mb-6"
         >
+          <BackButton fallback="/dashboard" className="mb-4" />
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Notifications Center</h1>
           <p className="mt-2 text-slate-600">Stay on top of order updates, messages, and group events.</p>
         </motion.div>

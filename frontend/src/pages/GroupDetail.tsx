@@ -1,19 +1,28 @@
 import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Users, ArrowLeft, ShieldCheck, Info, Music, Tv, BookOpen, FileText, PenTool, Calendar, Share2, Key } from 'lucide-react';
+import { Users, ShieldCheck, Info, Music, Tv, BookOpen, FileText, PenTool, Calendar, Share2, Key, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { getSubscriptionGroupById, joinSubscriptionGroup, type SubscriptionGroup } from '../lib/api';
+import BackButton from '../components/BackButton';
+import { getSubscriptionGroupById, joinSubscriptionGroup } from '../lib/api';
+import type { SubscriptionGroup } from '../lib/types';
 import { useApiQuery } from '../hooks/useApiQuery';
 import QueryErrorState from '../components/QueryErrorState';
+import { useAuth } from '../context/AuthContext';
+import VerificationModal from '../components/VerificationModal';
 
 const iconMap: Record<string, any> = { Music, Tv, BookOpen, FileText, PenTool };
 
 export default function GroupDetail() {
+  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isJoining, setIsJoining] = React.useState(false);
   const [joinError, setJoinError] = React.useState<string | null>(null);
+  const [showVerificationModal, setShowVerificationModal] = React.useState(false);
+
+  const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
+
   const { data: group, isLoading: loading, isError, refetch } = useApiQuery<SubscriptionGroup | undefined>({
     queryKey: ['subscription-group', id],
     queryFn: () => (id ? getSubscriptionGroupById(id) : Promise.resolve(undefined)),
@@ -52,6 +61,10 @@ export default function GroupDetail() {
     if (!id || isJoining) {
       return;
     }
+    if (!isVerified) {
+      setShowVerificationModal(true);
+      return;
+    }
     setIsJoining(true);
     setJoinError(null);
     try {
@@ -65,15 +78,19 @@ export default function GroupDetail() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8"
-    >
-      <Link to="/co-subs" className="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600 mb-8 transition-colors">
-        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Co-Subscriptions
-      </Link>
+    <>
+      <VerificationModal 
+        isOpen={showVerificationModal} 
+        onClose={() => setShowVerificationModal(false)} 
+      />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8"
+      >
+      <BackButton fallback="/co-subs" label="Back to Co-Subscriptions" className="mb-6" />
 
       <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
         <div className="flex items-start justify-between mb-6">
@@ -102,11 +119,26 @@ export default function GroupDetail() {
                 </span>
               </div>
               <h1 className="text-2xl font-semibold text-gray-900 font-display">{group.service}</h1>
-              <p className="text-gray-500">Organized by {group.owner}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-gray-500 text-sm">Organized by {group.owner}</p>
+                <button 
+                  onClick={() => {
+                    if (!isVerified) {
+                      setShowVerificationModal(true);
+                    } else if (group.ownerId) {
+                      navigate(`/inbox?participant=${group.ownerId}`);
+                    }
+                  }}
+                  className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  title="Message organizer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-light text-gray-900">${group.pricePerMonth.toFixed(2)}</div>
+            <div className="text-3xl font-light text-gray-900">৳{group.pricePerMonth.toFixed(2)}</div>
             <div className="text-sm text-gray-500">per month {isSublet ? '' : '/ person'}</div>
           </div>
         </div>
@@ -163,7 +195,7 @@ export default function GroupDetail() {
             <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-indigo-600" />
             <div className="text-sm">
               <strong className="block mb-1">Escrow Protected</strong>
-              Your payment of ${group.pricePerMonth.toFixed(2)} will be held securely. The organizer only receives funds once {isSublet ? 'the sublet is confirmed' : `all ${group.totalSpots} spots are filled`} and the subscription is activated.
+              Your payment of ৳{group.pricePerMonth.toFixed(2)} will be held securely. The organizer only receives funds once {isSublet ? 'the sublet is confirmed' : `all ${group.totalSpots} spots are filled`} and the subscription is activated.
             </div>
           </div>
         </div>
@@ -174,7 +206,7 @@ export default function GroupDetail() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-gray-600">
               <span>Total Subscription Cost</span>
-              <span>${group.totalPrice.toFixed(2)}/mo</span>
+              <span>৳{group.totalPrice.toFixed(2)}/mo</span>
             </div>
             {!isSublet && (
               <div className="flex justify-between text-gray-600">
@@ -184,7 +216,7 @@ export default function GroupDetail() {
             )}
             <div className="flex justify-between font-medium text-gray-900 pt-2 border-t border-gray-100">
               <span>{isSublet ? 'Your Monthly Cost' : 'Your Monthly Share'}</span>
-              <span>${group.pricePerMonth.toFixed(2)}</span>
+              <span>৳{group.pricePerMonth.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -222,5 +254,6 @@ export default function GroupDetail() {
         )}
       </div>
     </motion.div>
+    </>
   );
 }

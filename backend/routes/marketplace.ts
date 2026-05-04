@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import db from "../db/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -8,7 +9,7 @@ import { formatItem } from "../utils.js";
 const router = Router();
 
 const ITEM_SELECT = `
-  SELECT m.*, u.name AS seller_name,
+  SELECT m.*, u.name AS seller_name, u.verification_status,
     COALESCE(ROUND(AVG(r.rating), 1), 0) AS seller_rating,
     COUNT(DISTINCT r.id) AS reviews_count
   FROM marketplace_items m
@@ -27,7 +28,9 @@ const CreateListingSchema = z.object({
   imageUrl: z.string().optional(),
 });
 
-const UpdateListingSchema = CreateListingSchema.partial();
+const UpdateListingSchema = CreateListingSchema.partial().extend({
+  isActive: z.boolean().optional(),
+});
 
 // GET /api/marketplace/
 router.get("/", (req: Request, res: Response) => {
@@ -35,7 +38,7 @@ router.get("/", (req: Request, res: Response) => {
     const { seller, type, category, condition, q, min_price, max_price } =
       req.query as Record<string, string>;
 
-    let sql = ITEM_SELECT + " WHERE m.is_active = 1";
+    let sql = ITEM_SELECT + " WHERE m.is_active = 1 AND u.verification_status = 'verified'";
     const params: (string | number)[] = [];
 
     if (seller) {
@@ -101,6 +104,10 @@ router.post(
   validate(CreateListingSchema),
   (req: Request, res: Response) => {
     try {
+      if (req.user?.verificationStatus !== 'verified' && req.user?.role !== 'admin') {
+        res.status(403).json({ detail: "Only verified users can create listings." });
+        return;
+      }
       const {
         title,
         category,
@@ -169,6 +176,7 @@ router.put(
         price,
         exchangeFor,
         imageUrl,
+        isActive,
       } = req.body;
       db.prepare(
         `
@@ -180,7 +188,8 @@ router.put(
         description  = COALESCE(?, description),
         price        = COALESCE(?, price),
         exchange_for = COALESCE(?, exchange_for),
-        image_url    = COALESCE(?, image_url)
+        image_url    = COALESCE(?, image_url),
+        is_active    = COALESCE(?, is_active)
       WHERE id = ?
     `,
       ).run(
@@ -192,6 +201,7 @@ router.put(
         price ?? null,
         exchangeFor ?? null,
         imageUrl ?? null,
+        isActive ?? null,
         req.params.id,
       );
       const updated = db

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Search, MapPin, ArrowRight, Book, Users, Sparkles, ShieldCheck, Handshake, BadgeCheck, GraduationCap } from 'lucide-react';
+import { MapPin, ArrowRight, Book, Users, Sparkles, ShieldCheck, Handshake, BadgeCheck, GraduationCap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const IMAGES = [
   {
@@ -32,7 +33,6 @@ const HERO_HIGHLIGHTS = [
   { icon: MapPin, label: 'On-campus pickup spots' },
 ];
 
-const POPULAR_SEARCHES = ['CSE 111', 'EEE 101', 'BBA 201'];
 
 const TRUST_POINTS = [
   {
@@ -54,6 +54,7 @@ const TRUST_POINTS = [
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { user } = useAuth();
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
@@ -207,60 +208,6 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            <motion.div
-              variants={heroItemVariants}
-              whileHover={prefersReducedMotion ? undefined : { y: -4 }}
-              className="w-full rounded-3xl border border-white/20 bg-white/10 backdrop-blur-xl p-4 md:p-5 shadow-[0_35px_90px_rgba(15,23,42,0.45)]"
-            >
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/60 font-body">
-                <span>Search</span>
-                <span className="normal-case text-white/60 tracking-normal">Find UIU listings fast</span>
-              </div>
-
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const query = formData.get('q');
-                  if (query) {
-                    navigate(`/marketplace?q=${encodeURIComponent(query.toString())}`);
-                  } else {
-                    navigate('/marketplace');
-                  }
-                }}
-                variants={heroItemVariants}
-                className="mt-4 space-y-3"
-              >
-                <div className="flex items-center bg-white/10 rounded-2xl px-4 py-3.5 transition-colors focus-within:bg-white/20 focus-within:ring-1 focus-within:ring-white/30">
-                  <Search className="w-5 h-5 text-white/70 mr-3" />
-                  <input
-                    type="text"
-                    name="q"
-                    placeholder="Search CSE 111, EEE 101, BBA 201..."
-                    aria-label="Search listings"
-                    className="bg-transparent border-none outline-none text-white placeholder:text-white/60 w-full text-base"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-white text-gray-900 px-6 py-3.5 rounded-2xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                >
-                  Search <ArrowRight className="w-4 h-4" />
-                </button>
-              </motion.form>
-
-              <motion.div
-                variants={heroItemVariants}
-                className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/65 font-body"
-              >
-                <span className="uppercase tracking-[0.2em] text-[10px] text-white/50">Popular</span>
-                {POPULAR_SEARCHES.map((item) => (
-                  <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1">
-                    {item}
-                  </span>
-                ))}
-              </motion.div>
-            </motion.div>
           </motion.div>
         </div>
       </section>

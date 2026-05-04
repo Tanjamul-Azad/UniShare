@@ -44,6 +44,7 @@ export function formatItem(row: any) {
     image: row.image_url ?? undefined,
     seller: row.seller_name ?? "Unknown",
     sellerId: row.seller_id,
+    isVerified: row.verification_status === "verified",
     sellerRating: row.seller_rating
       ? Number(Number(row.seller_rating).toFixed(1))
       : 0,
@@ -69,6 +70,8 @@ export function formatGroup(row: any) {
     totalSpots,
     filledSpots,
     owner: row.owner_name ?? "Unknown",
+    ownerId: row.owner_id,
+    isVerified: row.verification_status === "verified",
     icon: row.icon ?? "Users",
     description: row.description ?? undefined,
     duration: row.duration_months ?? undefined,

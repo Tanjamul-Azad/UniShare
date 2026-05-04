@@ -1,8 +1,11 @@
 import { Router, Request, Response } from "express";
+import crypto from "crypto";
 import db from "../db/index.js";
 import { requireAuth } from "../middleware/auth.js";
+import { emitNotification } from "../socket/index.js";
 
 const router = Router();
+console.log("[orders] Router initialized");
 
 const FEE_RATE = 0.05;
 
@@ -10,6 +13,11 @@ const FEE_RATE = 0.05;
 router.post("/", requireAuth, (req: Request, res: Response) => {
   try {
     const buyerId = req.user!.id;
+
+    if (req.user?.verificationStatus !== 'verified') {
+      res.status(403).json({ detail: "Only verified users can make purchases." });
+      return;
+    }
 
     const cartItems = db
       .prepare(
@@ -67,6 +75,7 @@ router.post("/", requireAuth, (req: Request, res: Response) => {
 // GET /api/orders/ — buyer's history
 router.get("/", requireAuth, (req: Request, res: Response) => {
   try {
+    const buyerId = req.user!.id;
     const orders = db
       .prepare(
         `
@@ -74,11 +83,75 @@ router.get("/", requireAuth, (req: Request, res: Response) => {
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
       WHERE o.buyer_id = ?
-      GROUP BY o.id ORDER BY o.created_at DESC
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
     `,
       )
-      .all(req.user!.id) as any[];
-    res.json(orders);
+      .all(buyerId) as any[];
+
+    const orderItems = db
+      .prepare(
+        `
+      SELECT oi.id,
+             oi.order_id AS orderId,
+             oi.status,
+             oi.seller_note AS sellerNote,
+             m.title
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      LEFT JOIN marketplace_items m ON m.id = oi.item_id
+      WHERE o.buyer_id = ?
+    `,
+      )
+      .all(buyerId) as any[];
+
+    const itemsByOrderId = new Map<string, any[]>();
+    for (const item of orderItems) {
+      if (!itemsByOrderId.has(item.orderId)) {
+        itemsByOrderId.set(item.orderId, []);
+      }
+      itemsByOrderId.get(item.orderId)!.push({
+        id: item.id,
+        title: item.title,
+        status: item.status,
+        sellerNote: item.sellerNote,
+      });
+    }
+
+    res.json(
+      orders.map((order) => ({
+        id: order.id,
+        buyerId: order.buyer_id,
+        totalAmount: order.total_amount,
+        fee: order.fee,
+        status: order.status,
+        createdAt: order.created_at,
+        items: itemsByOrderId.get(order.id) ?? [],
+      })),
+    );
+  } catch (err: any) {
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+// GET /api/orders/sales — seller's incoming orders
+router.get("/sales", requireAuth, (req: Request, res: Response) => {
+  try {
+    const sellerId = req.user!.id;
+    const sales = db
+      .prepare(
+        `
+      SELECT oi.*, m.title, m.image_url, o.created_at, u.name as buyer_name, u.avatar as buyer_avatar
+      FROM order_items oi
+      JOIN marketplace_items m ON m.id = oi.item_id
+      JOIN orders o ON o.id = oi.order_id
+      JOIN users u ON u.id = o.buyer_id
+      WHERE m.seller_id = ?
+      ORDER BY o.created_at DESC
+    `,
+      )
+      .all(sellerId) as any[];
+    res.json(sales);
   } catch (err: any) {
     res.status(500).json({ detail: err.message });
   }
@@ -88,7 +161,12 @@ router.get("/", requireAuth, (req: Request, res: Response) => {
 router.get("/:id", requireAuth, (req: Request, res: Response) => {
   try {
     const order = db
-      .prepare("SELECT * FROM orders WHERE id = ? AND buyer_id = ?")
+      .prepare(`
+        SELECT o.*, u.name as buyer_name 
+        FROM orders o 
+        JOIN users u ON u.id = o.buyer_id 
+        WHERE o.id = ? AND o.buyer_id = ?
+      `)
       .get(req.params.id, req.user!.id) as any;
     if (!order) {
       res.status(404).json({ detail: "Order not found" });
@@ -98,7 +176,7 @@ router.get("/:id", requireAuth, (req: Request, res: Response) => {
     const items = db
       .prepare(
         `
-      SELECT oi.*, m.title, m.type, m.image_url
+      SELECT oi.id, oi.item_id AS itemId, oi.price_at_purchase AS priceAtPurchase, m.title, m.type, m.image_url AS image, m.seller_id AS sellerId
       FROM order_items oi
       LEFT JOIN marketplace_items m ON oi.item_id = m.id
       WHERE oi.order_id = ?
@@ -106,10 +184,92 @@ router.get("/:id", requireAuth, (req: Request, res: Response) => {
       )
       .all(req.params.id) as any[];
 
-    res.json({ ...order, items });
+    res.json({ 
+      id: order.id,
+      buyerId: order.buyer_id,
+      buyerName: order.buyer_name,
+      totalAmount: order.total_amount,
+      fee: order.fee,
+      status: order.status,
+      createdAt: order.created_at,
+      items 
+    });
   } catch (err: any) {
     res.status(500).json({ detail: err.message });
   }
 });
+
+// PATCH /api/orders/items/:id/confirm — seller confirms an item
+router.patch("/items/:id/confirm", requireAuth, (req: Request, res: Response) => {
+  try {
+    const sellerId = req.user!.id;
+    const { id } = req.params;
+
+
+    // Verify this seller owns the item in this order
+    const item = db.prepare(`
+      SELECT oi.*, m.title, o.buyer_id, u.name as seller_name
+      FROM order_items oi
+      JOIN marketplace_items m ON m.id = oi.item_id
+      JOIN orders o ON o.id = oi.order_id
+      JOIN users u ON u.id = m.seller_id
+      WHERE oi.id = ? AND m.seller_id = ?
+    `).get(id, sellerId) as any;
+
+    if (!item) {
+      res.status(404).json({ detail: "Order item not found or you don't have permission." });
+      return;
+    }
+
+    const { note, status } = req.body;
+    const newStatus = status || 'confirmed';
+
+    db.prepare(`
+      UPDATE order_items 
+      SET status = ?, seller_note = ? 
+      WHERE id = ?
+    `).run(newStatus, note || item.seller_note || null, id);
+
+    // Notify Buyer
+    const notifId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+    const statusMsg = newStatus === 'shipped' ? 'shipped your order' : 
+                      newStatus === 'delivered' ? 'marked your order as delivered' :
+                      'confirmed your order';
+    
+    const message = `${item.seller_name} has ${statusMsg} for "${item.title}".`;
+    
+    const notifTitle = newStatus === 'shipped' ? 'Order Shipped!' : 
+                       newStatus === 'delivered' ? 'Order Delivered!' :
+                       'Order Confirmed!';
+
+    db.prepare(`
+      INSERT INTO notifications (id, recipient_id, type, title, message, link_url)
+      VALUES (?, ?, 'order_update', ?, ?, ?)
+    `).run(
+      notifId,
+      item.buyer_id,
+      notifTitle,
+      message,
+      `/profile?tab=orders`
+    );
+
+    emitNotification({
+      id: notifId,
+      recipientId: item.buyer_id,
+      type: "order_update",
+      title: notifTitle,
+      message,
+      timestamp,
+      read: false,
+    });
+
+    res.json({ success: true, status: newStatus });
+  } catch (err: any) {
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+
 
 export default router;

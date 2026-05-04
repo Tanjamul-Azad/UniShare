@@ -1,7 +1,7 @@
 import type { Database } from "better-sqlite3";
 import bcrypt from "bcryptjs";
 
-const DEFAULT_PASSWORD = "name123";
+const DEFAULT_PASSWORD = "Admin1234";
 
 export function seedDatabase(db: Database) {
   const existing = db
@@ -17,8 +17,8 @@ export function seedDatabase(db: Database) {
   const users = [
     {
       id: "u-admin",
-      name: "Ayesha Rahman",
-      email: "ayesha@gmail.com",
+      name: "Admin",
+      email: "i.m.tanjamul@gmail.com",
       role: "admin",
       verificationStatus: "verified",
       uiuEmail: "ayesha@uiu.edu",
@@ -150,6 +150,18 @@ export function seedDatabase(db: Database) {
       imageUrl:
         "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80",
     },
+    {
+      id: "item-107",
+      sellerId: "u-seller",
+      title: "Blue Gel Pen",
+      type: "sell",
+      price: 5,
+      condition: "New",
+      category: "Stationery",
+      description: "Smooth ink flow, fast-drying, great for notes.",
+      imageUrl:
+        "https://images.unsplash.com/photo-1485579149621-3123dd979885?auto=format&fit=crop&w=800&q=80",
+    },
   ];
 
   const groups = [
@@ -203,11 +215,14 @@ export function seedDatabase(db: Database) {
     },
   ];
 
-  // Cart items for u-seller to test checkout flow
   const cartItems = [
     { id: "cart-1", userId: "u-seller", itemId: "item-105" },
     { id: "cart-2", userId: "u-seller", itemId: "item-102" },
   ];
+
+  const orders: any[] = [];
+
+  const orderItems: any[] = [];
 
   const insertUser = db.prepare(`
     INSERT INTO users (
@@ -245,6 +260,18 @@ export function seedDatabase(db: Database) {
   const insertCartItem = db.prepare(`
     INSERT INTO cart_items (id, user_id, item_id)
     VALUES (?, ?, ?)
+  `);
+
+  const insertOrder = db.prepare(`
+    INSERT INTO orders (
+      id, buyer_id, total_amount, fee, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertOrderItem = db.prepare(`
+    INSERT INTO order_items (
+      id, order_id, item_id, price_at_purchase, status
+    ) VALUES (?, ?, ?, ?, ?)
   `);
 
   const seedTx = db.transaction(() => {
@@ -320,6 +347,27 @@ export function seedDatabase(db: Database) {
 
     for (const item of cartItems) {
       insertCartItem.run(item.id, item.userId, item.itemId);
+    }
+
+    for (const order of orders) {
+      insertOrder.run(
+        order.id,
+        order.buyerId,
+        order.totalAmount,
+        order.fee,
+        order.status,
+        order.createdAt,
+      );
+    }
+
+    for (const item of orderItems) {
+      insertOrderItem.run(
+        item.id,
+        item.orderId,
+        item.itemId,
+        item.priceAtPurchase,
+        item.status,
+      );
     }
   });
 

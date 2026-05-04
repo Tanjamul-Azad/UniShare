@@ -4,6 +4,14 @@
 :root {
   --font-display: "Playfair Display", "Times New Roman", serif;
   --font-body: "Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Brand tokens */
+  --color-primary: #4f46e5;   /* indigo-600 */
+  --color-primary-hover: #4338ca; /* indigo-700 */
+  --color-admin: #4f46e5;     /* indigo-600 */
+  --color-admin-hover: #4338ca; /* indigo-700 */
+  --color-danger: #ef4444;    /* rose-500 */
+  --color-danger-hover: #dc2626; /* rose-600 */
 }
 
 html {
@@ -45,6 +53,158 @@ body {
   opacity: 0.22;
 }
 
+/* ── Shared Button Base ────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  outline: none;
+  text-decoration: none;
+}
+.btn:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.btn-sm  { padding: 0.375rem 0.875rem; font-size: 0.75rem; }
+.btn-md  { padding: 0.625rem 1.25rem; }
+.btn-lg  { padding: 0.75rem 1.5rem; font-size: 1rem; }
+
+/* Variants */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(79,70,229,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(79,70,229,0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary);
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: #6b7280;
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #fff;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--color-danger-hover);
+  transform: translateY(-1px);
+}
+
+.btn-admin {
+  background-color: var(--color-admin);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(79,70,229,0.3);
+}
+.btn-admin:hover:not(:disabled) {
+  background-color: var(--color-admin-hover);
+  box-shadow: 0 4px 12px rgba(79,70,229,0.35);
+  transform: translateY(-1px);
+}
+.btn-admin:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-admin);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* ── Back Button ────────────────────────────────────────────── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.625rem;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.back-btn:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+  transform: translateX(-2px);
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+.card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+/* ── Page Section ───────────────────────────────────────────── */
+.page-section {
+  padding-top: 1.5rem;
+  padding-bottom: 2.5rem;
+}
+
+/* ── Skeleton ───────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9eaec 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s infinite;
+  border-radius: 0.5rem;
+}
+@keyframes skeleton-wave {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Global focus styles */
 *:focus-visible {
   outline: 2px solid transparent;
@@ -59,4 +219,19 @@ body {
   transition-property: box-shadow;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+/* ── Print Styles ───────────────────────────────────────────── */
+@media print {
+  nav, footer, .side-actions, .marketplace-banner, button {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .print-only-invoice {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }

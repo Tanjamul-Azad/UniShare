@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import db from "../db/index.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -18,12 +19,22 @@ const UpdateProfileSchema = z.object({
   avatar: z.string().optional(),
 });
 
-// GET /api/users/by-email/?email=  (used by login flow)
-router.get("/by-email/", (req: Request, res: Response) => {
+const SubmitVerificationSchema = z.object({
+  uiuEmail: z.string().email(),
+  uiuIdNumber: z.string().min(1),
+  uiuIdImage: z.string().min(1),
+});
+
+// GET /api/users/by-email/?email=
+router.get("/by-email/", requireAuth, (req: Request, res: Response) => {
   try {
     const email = (req.query.email as string)?.trim().toLowerCase();
     if (!email) {
       res.status(400).json({ detail: "email query param required" });
+      return;
+    }
+    if (req.user?.role !== "admin" && req.user?.email.toLowerCase() !== email) {
+      res.status(403).json({ detail: "Forbidden" });
       return;
     }
     const user = db
@@ -123,5 +134,99 @@ router.put(
     }
   },
 );
+
+// DELETE /api/users/:id — admin only
+router.delete("/:id", requireAdmin, (req: Request, res: Response) => {
+  try {
+    const existing = db
+      .prepare("SELECT * FROM users WHERE id = ?")
+      .get(req.params.id) as any;
+    if (!existing) {
+      res.status(404).json({ detail: "User not found" });
+      return;
+    }
+    // Don't allow deleting yourself
+    if (existing.id === req.user!.id) {
+      res.status(400).json({ detail: "Cannot delete your own admin account" });
+      return;
+    }
+    db.prepare("DELETE FROM users WHERE id = ?").run(req.params.id);
+    res.status(204).end();
+  } catch (err: any) {
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+// POST /api/users/:id/verify
+router.post(
+  "/:id/verify",
+  requireAuth,
+  validate(SubmitVerificationSchema),
+  (req: Request, res: Response) => {
+    try {
+      if (req.user!.id !== req.params.id) {
+        res.status(403).json({ detail: "Forbidden" });
+        return;
+      }
+
+      const { uiuEmail, uiuIdNumber, uiuIdImage } = req.body;
+      const now = new Date().toISOString();
+
+      db.prepare(
+        `
+        UPDATE users SET 
+          uiu_email = ?,
+          uiu_id_number = ?,
+          uiu_id_image = ?,
+          verification_status = 'pending',
+          verification_submitted_at = ?
+        WHERE id = ?
+      `,
+      ).run(uiuEmail, uiuIdNumber, uiuIdImage, now, req.params.id);
+
+      db.prepare(
+        `
+        INSERT INTO verification_requests (id, user_id, uiu_email, uiu_id_number, uiu_id_image, status, submitted_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?)
+      `,
+      ).run(
+        crypto.randomUUID(),
+        req.params.id,
+        uiuEmail,
+        uiuIdNumber,
+        uiuIdImage,
+        now,
+      );
+
+      const updated = db
+        .prepare("SELECT * FROM users WHERE id = ?")
+        .get(req.params.id) as any;
+      res.json(formatUser(updated));
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  },
+);
+
+// PATCH /api/users/:id/role — admin only
+router.patch("/:id/role", requireAdmin, (req: Request, res: Response) => {
+  try {
+    const { role } = req.body;
+    if (!role || !["user", "admin"].includes(role)) {
+      res.status(400).json({ detail: "Invalid role" });
+      return;
+    }
+    db.prepare("UPDATE users SET role = ? WHERE id = ?").run(
+      role,
+      req.params.id,
+    );
+    const updated = db
+      .prepare("SELECT * FROM users WHERE id = ?")
+      .get(req.params.id) as any;
+    res.json(formatUser(updated));
+  } catch (err: any) {
+    res.status(500).json({ detail: err.message });
+  }
+});
 
 export default router;

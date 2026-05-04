@@ -9,6 +9,7 @@ export const newListingSchema = z.discriminatedUnion('listingType', [
     description: z.string().trim().min(12, 'Description must be at least 12 characters.'),
     price: z.number().positive('Price must be greater than 0.'),
     exchangeFor: z.string().optional(),
+    imageUrl: z.string().optional(),
   }),
   z.object({
     listingType: z.literal('share'),
@@ -18,6 +19,7 @@ export const newListingSchema = z.discriminatedUnion('listingType', [
     description: z.string().trim().min(12, 'Description must be at least 12 characters.'),
     price: z.number().optional(),
     exchangeFor: z.string().optional(),
+    imageUrl: z.string().optional(),
   }),
   z.object({
     listingType: z.literal('barter'),
@@ -27,6 +29,7 @@ export const newListingSchema = z.discriminatedUnion('listingType', [
     description: z.string().trim().min(12, 'Description must be at least 12 characters.'),
     exchangeFor: z.string().trim().min(3, 'Please describe your exchange request.'),
     price: z.number().optional(),
+    imageUrl: z.string().optional(),
   }),
 ]);
 

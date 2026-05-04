@@ -30,7 +30,7 @@ export default function MyGroups() {
             <div key={group.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-2xl hover:border-gray-300 transition-colors">
               <div>
                 <h4 className="font-medium text-gray-900">{group.service}</h4>
-                <p className="text-sm text-gray-500 mt-0.5">{group.filledSpots} of {group.totalSpots} spots filled • ${group.pricePerMonth}/mo</p>
+                <p className="text-sm text-gray-500 mt-0.5">{group.filledSpots} of {group.totalSpots} spots filled • ৳{group.pricePerMonth}/mo</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-100">Active</span>

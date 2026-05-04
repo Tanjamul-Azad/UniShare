@@ -8,14 +8,20 @@ import { createSubscriptionGroup } from '../lib/api';
 import { emitToast } from '../lib/toastBus';
 import { newGroupSchema } from '../lib/validation';
 import Modal from '../components/Modal';
+import VerificationModal from '../components/VerificationModal';
+import { useAuth } from '../context/AuthContext';
 
 type GroupFieldErrors = Partial<Record<'service' | 'monthlyCost' | 'totalSpots' | 'duration' | 'description', string>>;
 
 export default function NewGroup() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [listingType, setListingType] = useState<'share' | 'sublet'>('share');
   const [fieldErrors, setFieldErrors] = useState<GroupFieldErrors>({});
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
 
   const createGroupMutation = useMutation({
     mutationFn: createSubscriptionGroup,
@@ -63,16 +69,28 @@ export default function NewGroup() {
     }
 
     setFieldErrors({});
+    
+    if (!isVerified) {
+      setShowVerificationModal(true);
+      return;
+    }
+
     createGroupMutation.mutate(parsed.data);
   };
 
   return (
-    <Modal
-      isOpen={true}
-      onClose={() => navigate(-1)}
-      title="List a Subscription"
-      description="Share or sublet your digital subscriptions securely."
-    >
+    <>
+      <VerificationModal 
+        isOpen={showVerificationModal} 
+        onClose={() => setShowVerificationModal(false)} 
+      />
+      
+      <Modal
+        isOpen={true}
+        onClose={() => navigate(-1)}
+        title="List a Subscription"
+        description="Share or sublet your digital subscriptions securely."
+      >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Listing Type Selection */}
         <div className="space-y-3">
@@ -110,7 +128,7 @@ export default function NewGroup() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              {listingType === 'share' ? 'Total Monthly Cost ($)' : 'Monthly Sublet Price ($)'}
+              {listingType === 'share' ? 'Total Monthly Cost (৳)' : 'Monthly Sublet Price (৳)'}
             </label>
             <input name="monthlyCost" type="number" required min="0" step="0.01" placeholder="0.00" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
             {fieldErrors.monthlyCost && <p className="mt-1 text-sm text-red-500">{fieldErrors.monthlyCost}</p>}
@@ -166,5 +184,6 @@ export default function NewGroup() {
         </div>
       </form>
     </Modal>
+    </>
   );
 }

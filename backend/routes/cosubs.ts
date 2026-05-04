@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import crypto from "crypto";
 import db from "../db/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -8,7 +9,7 @@ import { formatGroup } from "../utils.js";
 const router = Router();
 
 const GROUP_SELECT = `
-  SELECT g.*, u.name AS owner_name,
+  SELECT g.*, u.name AS owner_name, u.verification_status,
     COUNT(DISTINCT gm.id) AS filled_spots
   FROM subscription_groups g
   LEFT JOIN users u ON g.owner_id = u.id
@@ -30,7 +31,7 @@ router.get("/", (_req: Request, res: Response) => {
     const groups = db
       .prepare(
         GROUP_SELECT +
-          " WHERE g.is_active = 1 GROUP BY g.id ORDER BY g.created_at DESC",
+          " WHERE g.is_active = 1 AND u.verification_status = 'verified' GROUP BY g.id ORDER BY g.created_at DESC",
       )
       .all() as any[];
     res.json(groups.map(formatGroup));
@@ -64,6 +65,10 @@ router.post(
   validate(CreateGroupSchema),
   (req: Request, res: Response) => {
     try {
+      if (req.user?.verificationStatus !== 'verified' && req.user?.role !== 'admin') {
+        res.status(403).json({ detail: "Only verified users can create subscription listings." });
+        return;
+      }
       const {
         service,
         listingType,
@@ -112,6 +117,10 @@ router.post(
 // POST /api/co-subs/:id/join
 router.post("/:id/join", requireAuth, (req: Request, res: Response) => {
   try {
+    if (req.user?.verificationStatus !== 'verified' && req.user?.role !== 'admin') {
+      res.status(403).json({ detail: "Only verified users can join subscription groups." });
+      return;
+    }
     const group = db
       .prepare(
         GROUP_SELECT + " WHERE g.is_active = 1 AND g.id = ? GROUP BY g.id",

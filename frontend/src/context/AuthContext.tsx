@@ -5,6 +5,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../lib/firebase";
 
 export type VerificationStatus =
   | "unverified"
@@ -96,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("unishare_access_token");
+    void signOut(auth);
   };
   const updateUser = (updates: Partial<User>) => {
     setUser((prev) => (prev ? normalizeUser({ ...prev, ...updates }) : null));

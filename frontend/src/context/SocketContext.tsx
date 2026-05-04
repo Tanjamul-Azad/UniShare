@@ -1,12 +1,20 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
 
 interface Message {
   id: string;
   senderId: string;
   senderName: string;
   receiverId: string;
+  receiverName?: string;
   content: string;
   timestamp: string;
   read?: boolean;
@@ -64,6 +72,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   );
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const { user } = useAuth();
+  const { info } = useToast();
 
   useEffect(() => {
     // Only connect if user is logged in
@@ -169,6 +178,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     newSocket.on("receive_notification", (notif: Notification) => {
       setNotifications((prev) => [...prev, notif]);
+      // Avoid toasting messages if the user prefers ChatHead, but let's toast all by default.
+      if (notif.type !== 'message') {
+        info(notif.message, notif.title);
+      }
     });
 
     newSocket.on("notification_updated", (updatedNotif: Notification) => {
@@ -253,11 +266,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const sendTyping = (receiverId: string, isTyping: boolean) => {
-    if (socket && user) {
-      socket.emit("typing", { receiverId, isTyping });
-    }
-  };
+  const sendTyping = useCallback(
+    (receiverId: string, isTyping: boolean) => {
+      if (socket && user) {
+        socket.emit("typing", { receiverId, isTyping });
+      }
+    },
+    [socket, user],
+  );
 
   const sendNotification = (
     recipientId: string,
@@ -281,21 +297,24 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const markThreadRead = (participantId: string) => {
-    setUnreadThreadIds((prev) => prev.filter((id) => id !== participantId));
-    if (user) {
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.senderId === participantId && message.receiverId === user.id
-            ? { ...message, read: true }
-            : message,
-        ),
-      );
-    }
-    if (socket) {
-      socket.emit("mark_thread_read", { participantId });
-    }
-  };
+  const markThreadRead = useCallback(
+    (participantId: string) => {
+      setUnreadThreadIds((prev) => prev.filter((id) => id !== participantId));
+      if (user) {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.senderId === participantId && message.receiverId === user.id
+              ? { ...message, read: true }
+              : message,
+          ),
+        );
+      }
+      if (socket) {
+        socket.emit("mark_thread_read", { participantId });
+      }
+    },
+    [socket, user],
+  );
 
   // Filter notifications for current user
   const userNotifications = notifications.filter(

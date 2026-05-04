@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { loginUser, registerUser } from "../lib/api";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider, githubProvider } from "../lib/firebase";
+import { loginUser, registerUser, socialLogin } from "../lib/api";
 
 type SocialProvider = "google" | "github";
 
@@ -24,6 +26,7 @@ export default function Auth() {
   const location = useLocation();
   const [isLogin, setIsLogin] = useState(location.pathname !== "/signup");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
 
   // Form states
   const [name, setName] = useState("");
@@ -56,10 +59,12 @@ export default function Auth() {
     setUiuIdNumber("");
     setUiuIdImage("");
     setUiuIdFileName("");
+    setIsAdminMode(false);
   }, [location.pathname]);
 
-  // Get the page they were trying to visit, or default to dashboard
-  const from = location.state?.from?.pathname || "/dashboard";
+  // Get the page they were trying to visit, or default based on role
+  const defaultDest = isAdminMode ? "/admin" : "/dashboard";
+  const from = location.state?.from?.pathname || defaultDest;
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -139,32 +144,29 @@ export default function Auth() {
     reader.readAsDataURL(file);
   };
 
-  const handleSocialAuth = (provider: SocialProvider) => {
+  const handleSocialAuth = async (provider: SocialProvider) => {
     setError("");
     setFieldErrors({});
     setSocialLoading(provider);
 
-    setTimeout(() => {
-      const socialEmail =
-        provider === "google"
-          ? "member.google@unishare.app"
-          : "member.github@unishare.app";
-      const providerName =
-        provider === "google" ? "Google Member" : "GitHub Member";
+    try {
+      const firebaseProvider =
+        provider === "google" ? googleProvider : githubProvider;
+      const result = await signInWithPopup(auth, firebaseProvider);
+      const idToken = await result.user.getIdToken();
 
-      login({
-        id: `${provider}-${Math.random().toString(36).slice(2, 10)}`,
-        name: providerName,
-        email: socialEmail,
-        joinedDate: new Date().toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        }),
-      });
-
-      setSocialLoading(null);
+      const { user: userData, token } = await socialLogin(provider, idToken, isAdminMode ? 'admin' : 'user');
+      localStorage.setItem("unishare_access_token", token);
+      login(userData as any);
       navigate(from, { replace: true });
-    }, 700);
+    } catch (err: any) {
+      console.error("Social auth error:", err);
+      setError(
+        err.message ?? "Social login failed. Please ensure your configuration is correct.",
+      );
+    } finally {
+      setSocialLoading(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,16 +181,6 @@ export default function Auth() {
     if (!isLogin) {
       setIsLoading(true);
       try {
-        // When running tests (Vitest) or NODE env 'test', skip network and show verification UI.
-        if (
-          (import.meta as any).env?.VITEST ||
-          (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
-          typeof (globalThis as any).vi !== 'undefined'
-        ) {
-          setIsSuccess(true);
-          setIsLoading(false);
-          return;
-        }
         const { user: userData, token } = await registerUser({
           name: name.trim(),
           email: email.trim(),
@@ -198,9 +190,16 @@ export default function Auth() {
           uiuIdImage: uiuIdImage || undefined,
         });
         localStorage.setItem("unishare_access_token", token);
-        login(userData);
-        // Show verification submitted state after signup (tests expect verification flow)
-        setIsSuccess(true);
+        login(userData as any);
+        const hasVerificationData =
+          Boolean(uiuEmail.trim()) &&
+          Boolean(uiuIdNumber.trim()) &&
+          Boolean(uiuIdImage);
+        if (hasVerificationData) {
+          setIsSuccess(true);
+        } else {
+          navigate(from, { replace: true });
+        }
       } catch (err: any) {
         setError(err.message ?? "Unable to create account. Please try again.");
       } finally {
@@ -214,10 +213,13 @@ export default function Auth() {
       const { user: userData, token } = await loginUser({
         email: email.trim(),
         password,
+        requiredRole: isAdminMode ? 'admin' : 'user',
       });
       localStorage.setItem("unishare_access_token", token);
-      login(userData);
-      navigate(from, { replace: true });
+      login(userData as any);
+      // Redirect admins to admin portal, others to dashboard
+      const dest = (userData as any).role === "admin" ? "/admin" : (isAdminMode ? "/admin" : from);
+      navigate(dest, { replace: true });
     } catch (err: any) {
       setError(err.message ?? "Invalid email or password.");
     } finally {
@@ -275,25 +277,73 @@ export default function Auth() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-body">
       <motion.div
+        key={isAdminMode ? 'admin' : 'student'}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8 bg-white p-6 sm:p-10 rounded-2xl border border-gray-200 shadow-sm"
+        className={`max-w-md w-full space-y-8 p-6 sm:p-10 rounded-2xl border shadow-sm ${
+          isAdminMode
+            ? 'bg-gray-950 border-indigo-900/40 shadow-indigo-900/20'
+            : 'bg-white border-gray-200'
+        }`}
       >
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4">
-            <GraduationCap className="h-6 w-6 text-white" />
+        {/* Mode switcher – only shown on login, not signup */}
+        {isLogin && (
+          <div className={`flex rounded-xl p-1 gap-1 ${
+            isAdminMode ? 'bg-white/5' : 'bg-gray-100'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setIsAdminMode(false)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                !isAdminMode
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              Student
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAdminMode(true)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                isAdminMode
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Admin Portal
+            </button>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight font-display">
-            {isLogin ? "Welcome back" : "Join UniShare"}
+        )}
+
+        <div className="text-center">
+          <div className={`mx-auto h-12 w-12 rounded-xl flex items-center justify-center mb-4 ${
+            isAdminMode ? 'bg-indigo-600' : 'bg-gray-900'
+          }`}>
+            {isAdminMode
+              ? <ShieldCheck className="h-6 w-6 text-white" />
+              : <GraduationCap className="h-6 w-6 text-white" />
+            }
+          </div>
+          <h2 className={`text-3xl sm:text-4xl font-semibold tracking-tight font-display ${
+            isAdminMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            {isAdminMode ? 'Admin Sign In' : (isLogin ? 'Welcome back' : 'Join UniShare')}
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
-            {isLogin
-              ? "Enter your details to access your account."
-              : "Create your UIU account and submit verification to start trading."}
+          <p className={`mt-2 text-sm ${
+            isAdminMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            {isAdminMode
+              ? 'Access the UniShare admin control panel.'
+              : isLogin
+                ? 'Enter your details to access your account.'
+                : 'Create your UIU account and submit verification to start trading.'}
           </p>
         </div>
 
-        {!isLogin && (
+        {!isLogin && !isAdminMode && (
           <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex gap-3 items-start">
             <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-800 leading-relaxed">
@@ -303,94 +353,112 @@ export default function Auth() {
           </div>
         )}
 
+        {isAdminMode && (
+          <div className="bg-indigo-900/30 border border-indigo-800/40 rounded-xl p-4 flex gap-3 items-start">
+            <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-indigo-200 leading-relaxed">
+              <strong className="text-white">Restricted access.</strong> Only authorized UIU administrators can sign in here.
+            </p>
+          </div>
+        )}
+
         {error && (
-          <div className="bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-xl p-3 text-center">
+          <div className={`border text-sm rounded-xl p-3 text-center ${
+            isAdminMode
+              ? 'bg-rose-950/50 border-rose-800/50 text-rose-300'
+              : 'bg-rose-50 border-rose-100 text-rose-600'
+          }`}>
             {error}
           </div>
         )}
 
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => handleSocialAuth("google")}
-            disabled={Boolean(socialLoading)}
-            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {socialLoading === "google" ? (
-              <svg
-                className="animate-spin h-4 w-4 text-gray-700"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                ></path>
-              </svg>
-            ) : (
-              <Chrome className="h-4 w-4" />
-            )}
-            {socialLoading === "google"
-              ? "Connecting to Google..."
-              : `${isLogin ? "Continue" : "Sign up"} with Google`}
-          </button>
+        {/* Social login – hidden in admin mode */}
+        {!isAdminMode && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => handleSocialAuth("google")}
+              disabled={Boolean(socialLoading)}
+              className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {socialLoading === "google" ? (
+                <svg
+                  className="animate-spin h-4 w-4 text-gray-700"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+              ) : (
+                <Chrome className="h-4 w-4" />
+              )}
+              {socialLoading === "google"
+                ? "Connecting to Google..."
+                : `${isLogin ? "Continue" : "Sign up"} with Google`}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => handleSocialAuth("github")}
-            disabled={Boolean(socialLoading)}
-            className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {socialLoading === "github" ? (
-              <svg
-                className="animate-spin h-4 w-4 text-gray-700"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                ></path>
-              </svg>
-            ) : (
-              <Github className="h-4 w-4" />
-            )}
-            {socialLoading === "github"
-              ? "Connecting to GitHub..."
-              : `${isLogin ? "Continue" : "Sign up"} with GitHub`}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => handleSocialAuth("github")}
+              disabled={Boolean(socialLoading)}
+              className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {socialLoading === "github" ? (
+                <svg
+                  className="animate-spin h-4 w-4 text-gray-700"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+              ) : (
+                <Github className="h-4 w-4" />
+              )}
+              {socialLoading === "github"
+                ? "Connecting to GitHub..."
+                : `${isLogin ? "Continue" : "Sign up"} with GitHub`}
+            </button>
+          </div>
+        )}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200" />
+        {!isAdminMode && (
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-wide">
+              <span className="bg-white px-2 text-gray-400">
+                or continue with email
+              </span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase tracking-wide">
-            <span className="bg-white px-2 text-gray-400">
-              or continue with email
-            </span>
-          </div>
-        </div>
+        )}
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -454,7 +522,7 @@ export default function Auth() {
             <div>
               <label
                 htmlFor="email-address"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className={`block text-sm font-medium mb-1 ${isAdminMode ? 'text-gray-300' : 'text-gray-700'}`}
               >
                 Email Address
               </label>
@@ -473,7 +541,11 @@ export default function Auth() {
                     setEmail(e.target.value);
                     clearFieldError("email");
                   }}
-                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.email ? "border-rose-400 focus:ring-rose-400" : "border-gray-300 focus:ring-indigo-500"}`}
+                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 border placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${
+                    isAdminMode
+                      ? 'bg-gray-900 border-gray-800 text-white focus:ring-indigo-500'
+                      : `bg-white border-gray-300 text-gray-900 ${fieldErrors.email ? "border-rose-400 focus:ring-rose-400" : "focus:ring-indigo-500"}`
+                  }`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -586,7 +658,7 @@ export default function Auth() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className={`block text-sm font-medium mb-1 ${isAdminMode ? 'text-gray-300' : 'text-gray-700'}`}
               >
                 Password
               </label>
@@ -606,18 +678,17 @@ export default function Auth() {
                     clearFieldError("password");
                     clearFieldError("confirmPassword");
                   }}
-                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 bg-white border placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${fieldErrors.password ? "border-rose-400 focus:ring-rose-400" : "border-gray-300 focus:ring-indigo-500"}`}
+                  className={`appearance-none relative block w-full pl-10 pr-4 py-3 border placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm transition-all ${
+                    isAdminMode
+                      ? 'bg-gray-900 border-gray-800 text-white focus:ring-indigo-500'
+                      : `bg-white border-gray-300 text-gray-900 ${fieldErrors.password ? "border-rose-400 focus:ring-rose-400" : "focus:ring-indigo-500"}`
+                  }`}
                   placeholder="••••••••"
                 />
               </div>
               {fieldErrors.password ? (
                 <p className="mt-1 text-xs text-rose-600">
                   {fieldErrors.password}
-                </p>
-              ) : null}
-              {!fieldErrors.password && !isLogin ? (
-                <p className="mt-1 text-xs text-gray-500">
-                  Use at least 8 characters.
                 </p>
               ) : null}
             </div>
@@ -668,7 +739,7 @@ export default function Auth() {
                 />
                 <label
                   htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-700"
+                  className={`ml-2 block text-sm ${isAdminMode ? 'text-gray-400' : 'text-gray-700'}`}
                 >
                   Remember me
                 </label>
@@ -676,7 +747,7 @@ export default function Auth() {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+                  className={`font-medium hover:underline ${isAdminMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}
                 >
                   Forgot password?
                 </Link>
@@ -686,13 +757,12 @@ export default function Auth() {
 
           <button
             type="submit"
-            onClick={() => {
-              if (!isLogin) {
-                setIsSuccess(true);
-              }
-            }}
             disabled={isLoading || Boolean(socialLoading)}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed ${
+              isAdminMode
+                ? 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 shadow-lg shadow-indigo-900/30'
+                : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 shadow-sm'
+            }`}
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
@@ -713,30 +783,36 @@ export default function Auth() {
                   <path
                     className="opacity-75"
                     fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   ></path>
                 </svg>
-                Processing...
+                {isLogin ? "Signing in..." : "Creating account..."}
               </span>
             ) : (
-              <>
-                {isLogin ? "Sign in" : "Create account"}
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </>
+              <span className="flex items-center gap-2">
+                {isLogin ? "Sign In" : "Create Account"}
+                <ArrowRight className="w-4 h-4" />
+              </span>
             )}
           </button>
         </form>
 
-        <div className="text-center mt-6">
-          <button
-            onClick={toggleMode}
-            disabled={Boolean(socialLoading)}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
-          >
+        <div className="text-center">
+          <p className={`text-sm ${isAdminMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {isLogin
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
-          </button>
+              ? (isAdminMode ? "Student accounts should use the " : "Don't have an account? ")
+              : "Already have an account? "}
+            <button
+              onClick={toggleMode}
+              className={`font-semibold hover:underline ${
+                isAdminMode ? 'text-indigo-400' : 'text-indigo-600'
+              }`}
+            >
+              {isLogin
+                ? (isAdminMode ? "Student Login" : "Sign up")
+                : "Sign in"}
+            </button>
+          </p>
         </div>
       </motion.div>
     </div>

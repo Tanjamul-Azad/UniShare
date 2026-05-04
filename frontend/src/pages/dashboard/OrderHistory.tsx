@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getOrderById, getOrders, type OrderDetail, type OrderSummary } from "../../lib/api";
 import { useApiQuery } from "../../hooks/useApiQuery";
@@ -94,16 +94,29 @@ export default function OrderHistory() {
                       year: "numeric",
                     })}
                   </p>
+                  {order.items && order.items.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {order.items
+                        .slice(0, 2)
+                        .map((item) => item.title ?? "Untitled item")
+                        .join(" · ")}
+                      {order.items.length > 2 ? " · More" : ""}
+                    </p>
+                  )}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-900">${order.totalAmount.toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">৳{order.totalAmount.toFixed(2)}</span>
                   <span className="mx-2 text-gray-300">•</span>
                   {order.itemCount} item{order.itemCount === 1 ? "" : "s"}
                 </div>
               </div>
               <div className="mt-3 text-xs uppercase tracking-wide text-gray-500">Status</div>
               <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium text-emerald-600">{order.status}</div>
+                <div className={`text-sm font-bold uppercase tracking-wider ${
+                  order.status === 'paid' ? 'text-emerald-600' :
+                  order.status === 'pending' ? 'text-amber-600' :
+                  'text-gray-500'
+                }`}>{order.status}</div>
                 <button
                   onClick={() => toggleDetails(order.id)}
                   className="text-xs font-semibold text-indigo-600 hover:text-indigo-500"
@@ -122,14 +135,22 @@ export default function OrderHistory() {
                     <div className="space-y-3">
                       {(detailsById[order.id]?.items ?? []).map((item) => (
                         <div key={item.id} className="flex items-center justify-between text-sm">
-                          <Link
-                            to={`/marketplace/${item.itemId}`}
-                            className="text-gray-700 hover:text-indigo-600 transition-colors"
-                          >
-                            {item.title ?? `Item ${item.itemId}`}
-                          </Link>
-                          <div className="font-medium text-gray-900">
-                            ${item.priceAtPurchase.toFixed(2)}
+                          <div className="flex flex-col">
+                            <Link
+                              to={`/marketplace/${item.itemId}`}
+                              className="text-gray-900 font-medium hover:text-indigo-600 transition-colors"
+                            >
+                              {item.title ?? `Item ${item.itemId}`}
+                            </Link>
+                            <Link
+                              to={`/inbox?participant=${item.sellerId}`}
+                              className="mt-1 flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-500"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" /> Message Seller
+                            </Link>
+                          </div>
+                          <div className="font-semibold text-gray-900">
+                            ৳{item.priceAtPurchase.toFixed(2)}
                           </div>
                         </div>
                       ))}

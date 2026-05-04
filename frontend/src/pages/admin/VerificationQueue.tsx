@@ -6,9 +6,11 @@ import {
   approveVerificationRequest,
   getVerificationRequests,
   rejectVerificationRequest,
-  type VerificationRequest,
 } from "../../lib/api";
+import { VerificationRequest } from "../../lib/types";
 import QueryErrorState from "../../components/QueryErrorState";
+import { useToast } from "../../context/ToastContext";
+import { useSocket } from "../../context/SocketContext";
 
 const formatDate = (value?: string) =>
   value
@@ -24,6 +26,8 @@ const formatDate = (value?: string) =>
 export default function VerificationQueue() {
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const { success, error } = useToast();
+  const { sendNotification } = useSocket();
 
   const { data: requests = [], isLoading, isError, refetch } = useApiQuery<VerificationRequest[]>(
     {
@@ -53,15 +57,27 @@ export default function VerificationQueue() {
   const handleDecision = async (requestId: string, decision: "approve" | "reject") => {
     setActioningId(requestId);
     const note = notes[requestId];
+    const targetReq = requests.find((r) => r.id === requestId);
+    
     try {
       if (decision === "approve") {
         await approveVerificationRequest(requestId, note);
+        success(`Verification request for ${targetReq?.name} approved`);
+        if (targetReq?.userId) {
+          sendNotification(targetReq.userId, "verification", "Verification Approved", "Your UIU account has been verified!");
+        }
       } else {
         await rejectVerificationRequest(requestId, note);
+        success(`Verification request for ${targetReq?.name} rejected`);
+        if (targetReq?.userId) {
+          sendNotification(targetReq.userId, "verification", "Verification Rejected", note || "Please review your verification details and resubmit.");
+        }
       }
 
       setNotes((prev) => ({ ...prev, [requestId]: "" }));
       await refetch();
+    } catch (err) {
+      error("Failed to process request");
     } finally {
       setActioningId(null);
     }

@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import db from "../db/index.js";
 import { JWT_SECRET } from "../middleware/auth.js";
 
@@ -15,8 +16,31 @@ interface AuthSocket extends Socket {
 }
 
 const onlineUsers = new Set<string>();
+let ioInstance: Server | null = null;
+
+export function emitNotification(payload: {
+  recipientId: string;
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read?: boolean | number;
+}) {
+  if (!ioInstance) return;
+  ioInstance.to(payload.recipientId).emit("receive_notification", {
+    id: payload.id,
+    type: payload.type,
+    title: payload.title,
+    message: payload.message,
+    read: payload.read ?? false,
+    timestamp: payload.timestamp,
+    recipientId: payload.recipientId,
+  });
+}
 
 export function initSocket(io: Server) {
+  ioInstance = io;
   // Authenticate every socket connection via JWT
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;
@@ -148,11 +172,16 @@ export function initSocket(io: Server) {
               .get(msg.replyToId) as any)
           : null;
 
+        const receiver = db
+          .prepare("SELECT name FROM users WHERE id = ?")
+          .get(msg.receiverId) as any;
+
         const newMsg = {
           id,
           senderId: userId,
           senderName: userName,
           receiverId: msg.receiverId,
+          receiverName: receiver?.name ?? undefined,
           content: msg.content,
           timestamp,
           read: false,
@@ -166,7 +195,7 @@ export function initSocket(io: Server) {
 
         // Deliver to receiver's room and echo back to sender
         io.to(msg.receiverId).emit("receive_message", newMsg);
-        socket.emit("receive_message", newMsg);
+        socket.to(userId).emit("receive_message", newMsg);
         if (ack) {
           ack(newMsg);
         }

@@ -1,20 +1,29 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Star, ShieldCheck, MapPin, Calendar, ArrowLeft, MessageSquare, Heart, Package, Clock, CheckCircle2 } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Calendar, MessageSquare, Heart, Package, Clock, CheckCircle2 } from 'lucide-react';
 import ChatDrawer from '../components/ChatDrawer';
 import Reviews from '../components/Reviews';
+import BackButton from '../components/BackButton';
 import { cn } from '../lib/utils';
 import { useFavorites } from '../context/FavoritesContext';
 import { getSellerProfileById, type SellerProfileData } from '../lib/api';
 import { useApiQuery } from '../hooks/useApiQuery';
 import QueryErrorState from '../components/QueryErrorState';
 import ResponsiveImage from '../components/ResponsiveImage';
+import { useAuth } from '../context/AuthContext';
+import VerificationModal from '../components/VerificationModal';
+import { BadgeCheck } from 'lucide-react';
 
 export default function SellerProfile() {
+  const { user } = useAuth();
   const { id } = useParams();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
+
   const { data: sellerProfile, isLoading: loading, isError, refetch } = useApiQuery<SellerProfileData | undefined>({
     queryKey: ['seller-profile', id],
     queryFn: () => (id ? getSellerProfileById(id) : Promise.resolve(undefined)),
@@ -30,6 +39,14 @@ export default function SellerProfile() {
   
   const item = sellerProfile?.items[0];
   const sellerItems = sellerProfile?.items ?? [];
+
+  const handleOpenChat = () => {
+    if (!isVerified) {
+      setShowVerificationModal(true);
+      return;
+    }
+    setIsChatOpen(true);
+  };
 
   if (isError) {
     return (
@@ -51,15 +68,18 @@ export default function SellerProfile() {
 
   return (
     <>
+      <VerificationModal 
+        isOpen={showVerificationModal} 
+        onClose={() => setShowVerificationModal(false)} 
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="max-w-4xl mx-auto py-8"
       >
-        <Link to="/marketplace" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Marketplace
-        </Link>
+        <BackButton fallback="/marketplace" label="Back to Marketplace" className="mb-6" />
 
         {loading ? (
           <div className="animate-pulse space-y-8">
@@ -81,17 +101,29 @@ export default function SellerProfile() {
                   {item?.seller.charAt(0)}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold text-gray-900 mb-2 font-display">{sellerProfile?.sellerName}</h1>
+                  <h1 className="text-3xl font-semibold text-gray-900 mb-2 font-display flex items-center gap-2">
+                    {sellerProfile?.sellerName}
+                    {item?.isVerified && (
+                      <BadgeCheck className="w-6 h-6 text-blue-500 fill-blue-50" />
+                    )}
+                  </h1>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                       <span className="font-medium text-gray-900">{sellerProfile?.sellerRating}</span>
                       <span>({sellerProfile?.reviewsCount} reviews)</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                      <span>Verified Student</span>
-                    </div>
+                    {item?.isVerified ? (
+                      <div className="flex items-center gap-1 text-blue-600">
+                        <ShieldCheck className="w-4 h-4" />
+                        <span className="font-medium">Verified Student</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Unverified User</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       <span>Main Campus</span>
@@ -113,7 +145,7 @@ export default function SellerProfile() {
                 </div>
               </div>
               <button 
-                onClick={() => setIsChatOpen(true)}
+                onClick={handleOpenChat}
                 className="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <MessageSquare className="w-5 h-5" />
@@ -183,7 +215,7 @@ export default function SellerProfile() {
                     </div>
                     <div className="p-4 flex-1 flex flex-col">
                       <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{sellerItem.title}</h3>
-                      <p className="text-lg font-semibold text-indigo-600 mt-auto">${sellerItem.price.toFixed(2)}</p>
+                      <p className="text-lg font-semibold text-indigo-600 mt-auto">৳{sellerItem.price.toFixed(2)}</p>
                     </div>
                   </Link>
                 ))}

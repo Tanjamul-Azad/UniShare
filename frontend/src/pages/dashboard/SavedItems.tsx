@@ -41,7 +41,7 @@ export default function SavedItems() {
               <div className="p-4">
                 <h4 className="font-medium text-gray-900 line-clamp-1 mb-1">{item.title}</h4>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-900">${item.price}</span>
+                  <span className="font-semibold text-gray-900">৳{item.price}</span>
                   <Link to={`/marketplace/${item.id}`} className="text-sm text-blue-600 hover:text-blue-700 font-medium">View</Link>
                 </div>
               </div>

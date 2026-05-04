@@ -19,10 +19,23 @@ export default function ProtectedRoute({
     return <PageLoader />;
   }
 
+  // 1. Not logged in -> Login
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // 2. Logged in as Admin, but trying to access User Dashboard
+  // We strictly separate Admin from personal dashboard per user request
+  if (user.role === 'admin' && !requiredRole && location.pathname.startsWith('/dashboard')) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // 3. Logged in as User, but trying to access Admin Portal
+  if (requiredRole === 'admin' && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  // 4. Required role mismatch (generic check)
   if (requiredRole && user.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }

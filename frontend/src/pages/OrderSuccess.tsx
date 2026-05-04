@@ -1,34 +1,34 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { 
-  Bell, 
-  CheckCircle2, 
-  Package, 
-  MessageSquare, 
-  Printer, 
-  ArrowRight 
-} from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useApiQuery } from '../hooks/useApiQuery';
-import { apiClient } from '../lib/apiClient';
-import { useQueryClient } from '@tanstack/react-query';
+import React from "react";
+import { motion } from "motion/react";
+import {
+  Bell,
+  CheckCircle2,
+  Package,
+  MessageSquare,
+  Printer,
+  ArrowRight,
+} from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useApiQuery } from "../hooks/useApiQuery";
+import { apiClient } from "../lib/apiClient";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function OrderSuccess() {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get('orderId') || searchParams.get('tran_id');
+  const orderId = searchParams.get("orderId") || searchParams.get("tran_id");
 
   const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useApiQuery<any>({
-    queryKey: ['order', orderId],
+    queryKey: ["order", orderId],
     queryFn: () => apiClient(`/orders/${orderId}`),
     enabled: !!orderId,
   });
 
   React.useEffect(() => {
     // Invalidate cart items to clear them from UI
-    queryClient.invalidateQueries({ queryKey: ['cart-preview-items'] });
-    queryClient.invalidateQueries({ queryKey: ['marketplace-items'] }); // In case stock changed
+    queryClient.invalidateQueries({ queryKey: ["cart-preview-items"] });
+    queryClient.invalidateQueries({ queryKey: ["marketplace-items"] }); // In case stock changed
   }, [queryClient]);
 
   if (isLoading) {
@@ -39,14 +39,20 @@ export default function OrderSuccess() {
     );
   }
 
-  const subtotal = order?.items?.reduce((sum: number, item: any) => sum + (Number(item.priceAtPurchase) || 0), 0) || 0;
-  const total = order?.total_amount || 0;
+  const subtotal =
+    order?.items?.reduce(
+      (sum: number, item: any) => sum + (Number(item.priceAtPurchase) || 0),
+      0,
+    ) || 0;
+  const total = order?.totalAmount || 0;
   const fee = order?.fee || 0;
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Pending';
+    if (!dateStr) return "Pending";
     const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? 'Recently' : d.toLocaleDateString(undefined, { dateStyle: 'long' });
+    return isNaN(d.getTime())
+      ? "Recently"
+      : d.toLocaleDateString(undefined, { dateStyle: "long" });
   };
 
   return (
@@ -56,7 +62,6 @@ export default function OrderSuccess() {
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           {/* Main Invoice Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -74,11 +79,13 @@ export default function OrderSuccess() {
                     <CheckCircle2 className="w-3 h-3" /> Payment Successful
                   </div>
                   <h1 className="text-3xl font-bold">Invoice</h1>
-                  <p className="text-emerald-100 mt-1">Transaction Ref: {order?.tran_id || 'UNI-MOCK'}</p>
+                  <p className="text-emerald-100 mt-1">
+                    Transaction Ref: {order?.id || "UNI-MOCK"}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-emerald-100">Date</p>
-                  <p className="font-bold">{formatDate(order?.created_at)}</p>
+                  <p className="font-bold">{formatDate(order?.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -86,15 +93,29 @@ export default function OrderSuccess() {
             {/* Bill To & Order Info */}
             <div className="p-8 border-b border-gray-100 grid grid-cols-2 gap-8">
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Billed To</p>
-                <p className="font-bold text-gray-900">{order?.buyer_name || 'Anonymous User'}</p>
-                <p className="text-xs text-gray-500 mt-0.5">ID: {order?.buyer_id}</p>
-                <p className="text-sm text-gray-500 mt-1">Order Ref: {orderId}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                  Billed To
+                </p>
+                <p className="font-bold text-gray-900">
+                  {order?.buyerName || "Anonymous User"}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  ID: {order?.buyerId}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Order Ref: {orderId}
+                </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">UniShare Inc.</p>
-                <p className="text-sm text-gray-500">United International University</p>
-                <p className="text-sm text-gray-500 mt-0.5">Dhaka, Bangladesh</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                  UniShare Inc.
+                </p>
+                <p className="text-sm text-gray-500">
+                  United International University
+                </p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Dhaka, Bangladesh
+                </p>
               </div>
             </div>
 
@@ -103,7 +124,9 @@ export default function OrderSuccess() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-100">
-                    <th className="text-left font-semibold pb-4">Description</th>
+                    <th className="text-left font-semibold pb-4">
+                      Description
+                    </th>
                     <th className="text-right font-semibold pb-4">Price</th>
                   </tr>
                 </thead>
@@ -113,35 +136,51 @@ export default function OrderSuccess() {
                       <td className="py-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">{item.title}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 capitalize">{item.type} • ID: {item.itemId}</p>
+                            <p className="font-semibold text-gray-900">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5 capitalize">
+                              {item.type} • ID: {item.itemId}
+                            </p>
                           </div>
-                          <Link 
+                          <Link
                             to={`/inbox?participant=${item.sellerId}`}
                             className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group relative"
                             title="Message Seller"
                           >
                             <MessageSquare className="w-4 h-4" />
-                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Message Seller</span>
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                              Message Seller
+                            </span>
                           </Link>
                         </div>
                       </td>
-                      <td className="py-4 text-right font-medium text-gray-900">৳{item.priceAtPurchase}</td>
+                      <td className="py-4 text-right font-medium text-gray-900">
+                        ৳{Number(item.priceAtPurchase).toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-100">
                     <td className="pt-6 text-gray-500">Subtotal</td>
-                    <td className="pt-6 text-right font-medium text-gray-900">৳{subtotal}</td>
+                    <td className="pt-6 text-right font-medium text-gray-900">
+                      ৳{subtotal.toFixed(2)}
+                    </td>
                   </tr>
                   <tr>
                     <td className="py-2 text-gray-500">Service Fee (5%)</td>
-                    <td className="py-2 text-right font-medium text-gray-900">৳{fee}</td>
+                    <td className="py-2 text-right font-medium text-gray-900">
+                      ৳{Number(fee).toFixed(2)}
+                    </td>
                   </tr>
                   <tr className="text-lg">
-                    <td className="pt-4 font-bold text-gray-900">Total Amount</td>
-                    <td className="pt-4 text-right font-bold text-indigo-600">৳{total}</td>
+                    <td className="pt-4 font-bold text-gray-900">
+                      Total Amount
+                    </td>
+                    <td className="pt-4 text-right font-bold text-indigo-600">
+                      ৳{Number(total).toFixed(2)}
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -149,8 +188,10 @@ export default function OrderSuccess() {
 
             {/* Footer */}
             <div className="bg-gray-50 p-6 flex items-center justify-between print:hidden">
-              <p className="text-xs text-gray-400">Thank you for sharing with UniShare.</p>
-              <button 
+              <p className="text-xs text-gray-400">
+                Thank you for sharing with UniShare.
+              </p>
+              <button
                 onClick={() => window.print()}
                 className="flex items-center gap-2 text-indigo-600 font-bold text-xs hover:text-indigo-700"
               >
@@ -167,15 +208,22 @@ export default function OrderSuccess() {
               transition={{ delay: 0.1 }}
               className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm"
             >
-              <h2 className="text-lg font-bold text-gray-900 mb-4">What's Next?</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                What's Next?
+              </h2>
               <ul className="space-y-4">
                 <li className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                     <Bell className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">Seller Notified</p>
-                    <p className="text-xs text-gray-500 mt-0.5">We've alerted the seller(s). They will confirm your order shortly.</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      Seller Notified
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      We've alerted the seller(s). They will confirm your order
+                      shortly.
+                    </p>
                   </div>
                 </li>
                 <li className="flex gap-3">
@@ -183,8 +231,13 @@ export default function OrderSuccess() {
                     <MessageSquare className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">Coordinate Handoff</p>
-                    <p className="text-xs text-gray-500 mt-0.5">You can message the seller directly to discuss how to receive your items.</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      Coordinate Handoff
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      You can message the seller directly to discuss how to
+                      receive your items.
+                    </p>
                   </div>
                 </li>
               </ul>
@@ -212,8 +265,14 @@ export default function OrderSuccess() {
             >
               <div className="relative z-10">
                 <h3 className="font-bold text-lg mb-2">Buy more, Save more!</h3>
-                <p className="text-indigo-100 text-sm mb-4">Explore thousands of other listings on the UniShare marketplace.</p>
-                <Link to="/marketplace" className="inline-flex items-center gap-2 bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-50">
+                <p className="text-indigo-100 text-sm mb-4">
+                  Explore thousands of other listings on the UniShare
+                  marketplace.
+                </p>
+                <Link
+                  to="/marketplace"
+                  className="inline-flex items-center gap-2 bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-50"
+                >
                   Marketplace <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -222,7 +281,6 @@ export default function OrderSuccess() {
               </div>
             </motion.div>
           </div>
-
         </div>
       </div>
     </section>

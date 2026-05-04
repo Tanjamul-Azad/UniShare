@@ -8,3 +8,5 @@ coverage/
 !.env.example
 database/
 *.db*
+service-account.json
+backend/*.json

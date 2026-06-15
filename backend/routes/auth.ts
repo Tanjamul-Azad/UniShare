@@ -7,6 +7,16 @@ import admin from "../lib/firebaseAdmin.js";
 import { validate } from "../middleware/validate.js";
 import { requireAuth, generateToken } from "../middleware/auth.js";
 import { formatUser } from "../utils.js";
+import { sendMail, buildPasswordResetEmail } from "../lib/mailer.js";
+
+const sha256 = (value: string) =>
+  crypto.createHash("sha256").update(value).digest("hex");
+
+const ForgotPasswordSchema = z.object({ email: z.string().email() });
+const ResetPasswordSchema = z.object({
+  token: z.string().min(10),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 const router = Router();
 console.log("[auth] Router initialized");
@@ -251,5 +261,101 @@ router.post("/update-password", requireAuth, (req: Request, res: Response) => {
     res.status(500).json({ detail: err.message });
   }
 });
+
+// POST /api/auth/forgot-password — issue a reset token + email the link
+router.post(
+  "/forgot-password",
+  validate(ForgotPasswordSchema),
+  async (req: Request, res: Response) => {
+    // Always respond the same way so we never reveal which emails exist.
+    const generic = {
+      message:
+        "If an account exists for that email, we've sent a password reset link.",
+    };
+    try {
+      const { email } = req.body;
+      const user = db
+        .prepare(
+          "SELECT * FROM users WHERE lower(email) = lower(?) OR lower(uiu_email) = lower(?)",
+        )
+        .get(email, email) as any;
+
+      // Only email/password accounts can reset (Google accounts have no password).
+      if (user && user.password_hash) {
+        // Invalidate any previous tokens for this user
+        db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ?").run(
+          user.id,
+        );
+
+        const rawToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        db.prepare(
+          `INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at)
+           VALUES (?, ?, ?, ?)`,
+        ).run(crypto.randomUUID(), user.id, sha256(rawToken), expiresAt);
+
+        const appUrl = process.env.APP_URL || "http://localhost:5173";
+        const link = `${appUrl}/#/reset-password?token=${rawToken}`;
+        const mail = buildPasswordResetEmail(user.name, link);
+        try {
+          await sendMail({ ...mail, to: user.email });
+        } catch (mailErr) {
+          console.error("[auth] Failed to send reset email:", mailErr);
+        }
+      }
+
+      res.json(generic);
+    } catch (err: any) {
+      // Still respond generically; log the real error server-side.
+      console.error("[auth] forgot-password error:", err);
+      res.json(generic);
+    }
+  },
+);
+
+// POST /api/auth/reset-password — consume a token + set a new password
+router.post(
+  "/reset-password",
+  validate(ResetPasswordSchema),
+  (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+      const row = db
+        .prepare(
+          "SELECT * FROM password_reset_tokens WHERE token_hash = ? AND used = 0",
+        )
+        .get(sha256(token)) as any;
+
+      if (!row) {
+        res.status(400).json({ detail: "Invalid or already-used reset link." });
+        return;
+      }
+      if (new Date(row.expires_at).getTime() < Date.now()) {
+        res.status(400).json({ detail: "This reset link has expired. Please request a new one." });
+        return;
+      }
+
+      const passwordHash = bcrypt.hashSync(password, 10);
+      const tx = db.transaction(() => {
+        db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
+          passwordHash,
+          row.user_id,
+        );
+        db.prepare("UPDATE password_reset_tokens SET used = 1 WHERE id = ?").run(
+          row.id,
+        );
+        // Clean up any other outstanding tokens for this user
+        db.prepare(
+          "DELETE FROM password_reset_tokens WHERE user_id = ? AND id != ?",
+        ).run(row.user_id, row.id);
+      });
+      tx();
+
+      res.json({ message: "Your password has been reset. You can now sign in." });
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  },
+);
 
 export default router;

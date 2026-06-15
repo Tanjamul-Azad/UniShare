@@ -2,21 +2,26 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, ArrowRight, KeyRound, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { requestPasswordReset } from '../lib/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    setError('');
+    try {
+      await requestPasswordReset(email.trim());
       setIsSubmitted(true);
-    }, 800);
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,6 +63,12 @@ export default function ForgotPassword() {
                 Enter your email address and we'll send you a link to reset your password.
               </p>
             </div>
+
+            {error && (
+              <div className="mt-6 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600 text-center">
+                {error}
+              </div>
+            )}
 
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               <div>

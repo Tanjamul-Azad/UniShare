@@ -27,6 +27,15 @@ import {
   AdminStats,
   BorrowRequest,
   TradeProposal,
+  IncomingRequest,
+  OutgoingRequest,
+  RequestKind,
+  RequestStatus,
+  CommunityPost,
+  CommunityComment,
+  CommunityCategory,
+  CommunityMediaType,
+  CreateCommunityPostInput,
 } from "./types";
 
 export type {
@@ -50,6 +59,15 @@ export type {
   AdminStats,
   BorrowRequest,
   TradeProposal,
+  IncomingRequest,
+  OutgoingRequest,
+  RequestKind,
+  RequestStatus,
+  CommunityPost,
+  CommunityComment,
+  CommunityCategory,
+  CommunityMediaType,
+  CreateCommunityPostInput,
 };
 
 /**
@@ -97,6 +115,23 @@ export async function updatePassword(password: string): Promise<{ message: strin
 
 export async function getCurrentUser(): Promise<MockUser> {
   return apiClient<MockUser>("/auth/me");
+}
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ message: string }> {
+  return apiClient<{ message: string }>("/auth/forgot-password", {
+    data: { email },
+  });
+}
+
+export async function resetPassword(
+  token: string,
+  password: string,
+): Promise<{ message: string }> {
+  return apiClient<{ message: string }>("/auth/reset-password", {
+    data: { token, password },
+  });
 }
 
 export async function getMarketplaceItems(): Promise<MarketplaceItem[]> {
@@ -654,10 +689,14 @@ export async function getSales(): Promise<any[]> {
   return apiClient<any[]>("/orders/sales");
 }
 
-export async function confirmOrderItem(itemId: string, note?: string): Promise<void> {
+export async function confirmOrderItem(
+  itemId: string,
+  note?: string,
+  status?: string,
+): Promise<void> {
   await apiClient<void>(`/orders/items/${itemId}/confirm`, {
     method: "PATCH",
-    data: { note },
+    data: { note, status },
   });
 }
 
@@ -720,6 +759,60 @@ export async function submitTradeProposal(
   });
 }
 
+const byPendingThenNewest = (
+  a: { status: string; createdAt: string },
+  b: { status: string; createdAt: string },
+) => {
+  if (a.status === "pending" && b.status !== "pending") return -1;
+  if (a.status !== "pending" && b.status === "pending") return 1;
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+};
+
+// Borrow/trade requests received on my own listings (as the owner).
+export async function getIncomingRequests(): Promise<IncomingRequest[]> {
+  const [borrow, trade] = await Promise.all([
+    apiClient<any[]>("/borrow-requests/incoming"),
+    apiClient<any[]>("/trade-proposals/incoming"),
+  ]);
+  return [
+    ...borrow.map((r) => ({ ...r, kind: "borrow" as RequestKind })),
+    ...trade.map((r) => ({ ...r, kind: "trade" as RequestKind })),
+  ].sort(byPendingThenNewest) as IncomingRequest[];
+}
+
+// Borrow/trade requests I have sent to other members (as the requester).
+export async function getMyRequests(): Promise<OutgoingRequest[]> {
+  const [borrow, trade] = await Promise.all([
+    apiClient<any[]>("/borrow-requests/"),
+    apiClient<any[]>("/trade-proposals/"),
+  ]);
+  return [
+    ...borrow.map((r) => ({ ...r, kind: "borrow" as RequestKind })),
+    ...trade.map((r) => ({ ...r, kind: "trade" as RequestKind })),
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  ) as OutgoingRequest[];
+}
+
+// Status transitions an item owner can drive on an incoming request.
+export type RequestAction =
+  | "approved"
+  | "rejected"
+  | "borrowed"
+  | "returned"
+  | "completed";
+
+// Owner advances the lifecycle of an incoming borrow/trade request.
+export async function reviewRequest(
+  kind: RequestKind,
+  id: string,
+  status: RequestAction,
+): Promise<{ id: string; status: string; reviewedAt: string }> {
+  const path =
+    kind === "borrow" ? `/borrow-requests/${id}` : `/trade-proposals/${id}`;
+  return apiClient(path, { method: "PATCH", data: { status } });
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   return apiClient<DashboardStats>("/dashboard/stats");
 }
@@ -743,4 +836,80 @@ export async function markAllNotificationsReadREST(): Promise<void> {
 
 export async function getAdminStats(): Promise<AdminStats> {
   return apiClient<AdminStats>("/admin/stats");
+}
+
+// ── Community feed ─────────────────────────────────────────────────────────
+
+export type CommunityFeedParams = {
+  category?: CommunityCategory;
+  urgent?: boolean;
+  mine?: boolean;
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export async function getCommunityFeed(
+  params: CommunityFeedParams = {},
+): Promise<CommunityPost[]> {
+  const qs = new URLSearchParams();
+  if (params.category) qs.set("category", params.category);
+  if (params.urgent) qs.set("urgent", "1");
+  if (params.mine) qs.set("mine", "1");
+  if (params.q) qs.set("q", params.q);
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.offset) qs.set("offset", String(params.offset));
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return apiClient<CommunityPost[]>(`/community/${suffix}`);
+}
+
+export async function getCommunityPost(id: string): Promise<CommunityPost> {
+  return apiClient<CommunityPost>(`/community/${id}`);
+}
+
+export async function createCommunityPost(
+  input: CreateCommunityPostInput,
+): Promise<CommunityPost> {
+  return apiClient<CommunityPost>("/community/", { data: input });
+}
+
+export async function deleteCommunityPost(id: string): Promise<void> {
+  await apiClient<void>(`/community/${id}`, { method: "DELETE" });
+}
+
+export async function toggleCommunityLike(
+  id: string,
+): Promise<{ liked: boolean; likeCount: number }> {
+  return apiClient(`/community/${id}/like`, { method: "POST" });
+}
+
+export async function resolveCommunityPost(
+  id: string,
+  resolved: boolean,
+): Promise<CommunityPost> {
+  return apiClient<CommunityPost>(`/community/${id}/resolve`, {
+    method: "PATCH",
+    data: { resolved },
+  });
+}
+
+export async function getCommunityComments(
+  id: string,
+): Promise<CommunityComment[]> {
+  return apiClient<CommunityComment[]>(`/community/${id}/comments`);
+}
+
+export async function addCommunityComment(
+  id: string,
+  content: string,
+): Promise<CommunityComment> {
+  return apiClient<CommunityComment>(`/community/${id}/comments`, {
+    data: { content },
+  });
+}
+
+export async function deleteCommunityComment(commentId: string): Promise<void> {
+  await apiClient<void>(`/community/comments/${commentId}`, {
+    method: "DELETE",
+  });
 }

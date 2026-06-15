@@ -23,6 +23,7 @@ const CreateGroupSchema = z.object({
   totalSpots: z.number().int().min(1).optional(),
   duration: z.number().int().min(1).optional(),
   description: z.string().optional(),
+  includeSelf: z.boolean().optional(),
 });
 
 // GET /api/co-subs/
@@ -76,6 +77,7 @@ router.post(
         totalSpots,
         duration,
         description,
+        includeSelf,
       } = req.body;
       const id = crypto.randomUUID();
       const spots = listingType === "share" ? (totalSpots ?? 2) : 1;
@@ -97,8 +99,8 @@ router.post(
         duration ?? null,
       );
 
-      // Owner auto-joins as first member for share type
-      if (listingType === "share") {
+      // Owner joins as first member only when they opt to take a spot (default true)
+      if (listingType === "share" && includeSelf !== false) {
         db.prepare(
           "INSERT INTO group_members (id, group_id, user_id) VALUES (?, ?, ?)",
         ).run(crypto.randomUUID(), id, req.user!.id);

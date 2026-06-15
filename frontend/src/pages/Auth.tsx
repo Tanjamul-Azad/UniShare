@@ -10,17 +10,16 @@ import {
   User as UserIcon,
   CheckCircle2,
   Chrome,
-  Github,
   IdCard,
   UploadCloud,
 } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider, githubProvider } from "../lib/firebase";
+import { auth, googleProvider } from "../lib/firebase";
 import { loginUser, registerUser, socialLogin } from "../lib/api";
 
-type SocialProvider = "google" | "github";
+type SocialProvider = "google";
 
 export default function Auth() {
   const location = useLocation();
@@ -150,9 +149,7 @@ export default function Auth() {
     setSocialLoading(provider);
 
     try {
-      const firebaseProvider =
-        provider === "google" ? googleProvider : githubProvider;
-      const result = await signInWithPopup(auth, firebaseProvider);
+      const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
       const { user: userData, token } = await socialLogin(provider, idToken, isAdminMode ? 'admin' : 'user');
@@ -408,41 +405,6 @@ export default function Auth() {
               {socialLoading === "google"
                 ? "Connecting to Google..."
                 : `${isLogin ? "Continue" : "Sign up"} with Google`}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSocialAuth("github")}
-              disabled={Boolean(socialLoading)}
-              className="w-full inline-flex items-center justify-center gap-2.5 py-3 px-4 border border-gray-300 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {socialLoading === "github" ? (
-                <svg
-                  className="animate-spin h-4 w-4 text-gray-700"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  ></path>
-                </svg>
-              ) : (
-                <Github className="h-4 w-4" />
-              )}
-              {socialLoading === "github"
-                ? "Connecting to GitHub..."
-                : `${isLogin ? "Continue" : "Sign up"} with GitHub`}
             </button>
           </div>
         )}

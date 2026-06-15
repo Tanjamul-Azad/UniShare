@@ -20,6 +20,8 @@ export default function NewGroup() {
   const [listingType, setListingType] = useState<'share' | 'sublet'>('share');
   const [fieldErrors, setFieldErrors] = useState<GroupFieldErrors>({});
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [includeSelf, setIncludeSelf] = useState(true);
+  const [totalSpotsInput, setTotalSpotsInput] = useState(4);
 
   const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
 
@@ -53,6 +55,7 @@ export default function NewGroup() {
       totalSpots: listingType === 'share' ? totalSpots : undefined,
       duration: listingType === 'sublet' ? duration : undefined,
       description,
+      includeSelf: listingType === 'share' ? includeSelf : undefined,
     });
 
     if (!parsed.success) {
@@ -136,7 +139,17 @@ export default function NewGroup() {
           {listingType === 'share' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Total Spots</label>
-              <input name="totalSpots" type="number" required min="2" max="10" placeholder="e.g. 4" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors" />
+              <input
+                name="totalSpots"
+                type="number"
+                required
+                min="2"
+                max="10"
+                placeholder="e.g. 4"
+                value={totalSpotsInput}
+                onChange={(e) => setTotalSpotsInput(Number(e.target.value))}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-colors"
+              />
               {fieldErrors.totalSpots && <p className="mt-1 text-sm text-red-500">{fieldErrors.totalSpots}</p>}
             </motion.div>
           )}
@@ -148,6 +161,38 @@ export default function NewGroup() {
             </motion.div>
           )}
         </div>
+
+        {listingType === 'share' && (
+          <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Count me as a member</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {includeSelf
+                    ? `You'll take 1 spot — ${Math.max((totalSpotsInput || 2) - 1, 0)} open for others to join.`
+                    : `All ${totalSpotsInput || 2} spots stay open for others to join.`}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={includeSelf}
+                onClick={() => setIncludeSelf((v) => !v)}
+                className={cn(
+                  'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
+                  includeSelf ? 'bg-indigo-600' : 'bg-gray-300',
+                )}
+              >
+                <span
+                  className={cn(
+                    'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
+                    includeSelf ? 'translate-x-5' : 'translate-x-0.5',
+                  )}
+                />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Description & Rules</label>

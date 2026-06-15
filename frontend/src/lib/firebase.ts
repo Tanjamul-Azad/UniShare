@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, GithubAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // These values should be provided in your .env file
 const firebaseConfig = {
@@ -19,7 +19,6 @@ export const auth = getAuth(app);
 
 // Providers
 export const googleProvider = new GoogleAuthProvider();
-export const githubProvider = new GithubAuthProvider();
 
 googleProvider.setCustomParameters({
   prompt: "select_account",

@@ -108,6 +108,8 @@ export type CreateSubscriptionGroupInput = {
   totalSpots?: number;
   duration?: number;
   description: string;
+  /** For share plans: whether the owner occupies one of the spots. */
+  includeSelf?: boolean;
 };
 
 export type VerificationSubmissionInput = {
@@ -182,6 +184,7 @@ export type DashboardStats = {
   savedCount: number;
   unreadMessages: number;
   unreadNotifications: number;
+  pendingRequestsCount: number;
   recentNotifications: {
     id: string;
     type: string;
@@ -242,6 +245,100 @@ export type TradeProposal = {
   itemId: string;
   offerDescription: string;
   status: 'pending' | 'approved' | 'rejected' | 'completed';
+  createdAt: string;
+  reviewedAt?: string;
+};
+
+export type RequestKind = 'borrow' | 'trade';
+
+export type RequestStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'borrowed'
+  | 'returned'
+  | 'completed';
+
+/** A borrow/trade request received on one of my listings. */
+export type IncomingRequest = {
+  id: string;
+  kind: RequestKind;
+  requesterId: string;
+  requesterName: string;
+  requesterAvatar?: string;
+  itemId: string;
+  itemTitle: string;
+  itemImage?: string;
+  itemType?: string;
+  status: RequestStatus;
+  message?: string;
+  offerDescription?: string;
+  createdAt: string;
+  reviewedAt?: string;
+};
+
+export type CommunityCategory =
+  | 'general'
+  | 'help'
+  | 'lost_found'
+  | 'event'
+  | 'study'
+  | 'housing';
+
+export type CommunityMediaType = 'image' | 'video';
+
+export type CommunityPost = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string | null;
+  authorVerification?: string | null;
+  content?: string | null;
+  category: CommunityCategory;
+  isUrgent: boolean;
+  isResolved: boolean;
+  location?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: CommunityMediaType | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
+};
+
+export type CommunityComment = {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string | null;
+  content: string;
+  createdAt: string;
+};
+
+export type CreateCommunityPostInput = {
+  content?: string;
+  category: CommunityCategory;
+  isUrgent?: boolean;
+  location?: string;
+  mediaUrl?: string;
+  mediaType?: CommunityMediaType;
+};
+
+/** A borrow/trade request I have sent to another member. */
+export type OutgoingRequest = {
+  id: string;
+  kind: RequestKind;
+  itemId: string;
+  itemTitle: string;
+  itemImage?: string;
+  itemType?: string;
+  ownerId: string;
+  ownerName: string;
+  status: RequestStatus;
+  message?: string;
+  offerDescription?: string;
   createdAt: string;
   reviewedAt?: string;
 };

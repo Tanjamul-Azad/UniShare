@@ -44,6 +44,7 @@ export default function Layout() {
   const authNav = [
     { path: '/marketplace', label: 'Marketplace' },
     { path: '/co-subs', label: 'Co-Subscriptions' },
+    { path: '/community', label: 'Community' },
   ];
 
   const navItems = user ? [...publicNav.slice(0, 1), ...authNav, ...publicNav.slice(1)] : publicNav;

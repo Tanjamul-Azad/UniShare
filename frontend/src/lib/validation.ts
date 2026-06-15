@@ -41,6 +41,7 @@ export const newGroupSchema = z.discriminatedUnion('listingType', [
     totalSpots: z.number().int().min(2, 'At least 2 spots are required.').max(10, 'Maximum is 10 spots.'),
     duration: z.number().optional(),
     description: z.string().trim().min(12, 'Description must be at least 12 characters.'),
+    includeSelf: z.boolean().optional(),
   }),
   z.object({
     listingType: z.literal('sublet'),

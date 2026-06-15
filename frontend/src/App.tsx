@@ -22,6 +22,8 @@ const ItemDetail = lazy(() => import('./pages/ItemDetail'));
 const SellerProfile = lazy(() => import('./pages/SellerProfile'));
 const CoSubs = lazy(() => import('./pages/CoSubs'));
 const GroupDetail = lazy(() => import('./pages/GroupDetail'));
+const Community = lazy(() => import('./pages/Community'));
+const CommunityPost = lazy(() => import('./pages/CommunityPost'));
 const About = lazy(() => import('./pages/About'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -32,12 +34,14 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Cookies = lazy(() => import('./pages/Cookies'));
 const Auth = lazy(() => import('./pages/Auth'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const DashboardLayout = lazy(() => import('./components/DashboardLayout'));
 const AdminLayout = lazy(() => import('./components/AdminLayout'));
 const DashboardOverview = lazy(() => import('./pages/dashboard/Overview'));
 const DashboardListings = lazy(() => import('./pages/dashboard/MyListings'));
 const DashboardGroups = lazy(() => import('./pages/dashboard/MyGroups'));
 const DashboardOrders = lazy(() => import('./pages/dashboard/OrderHistory'));
+const DashboardRequests = lazy(() => import('./pages/dashboard/Requests'));
 const DashboardSaved = lazy(() => import('./pages/dashboard/SavedItems'));
 const DashboardSettings = lazy(() => import('./pages/dashboard/Settings'));
 const AdminVerificationQueue = lazy(() => import('./pages/admin/VerificationQueue'));
@@ -78,11 +82,14 @@ export default function App() {
                   <Route path="seller/:id" element={withPageLoader(<ProtectedRoute><SellerProfile /></ProtectedRoute>)} />
                   <Route path="co-subs" element={withPageLoader(<ProtectedRoute><CoSubs /></ProtectedRoute>)} />
                   <Route path="co-subs/:id" element={withPageLoader(<ProtectedRoute><GroupDetail /></ProtectedRoute>)} />
+                  <Route path="community" element={withPageLoader(<ProtectedRoute><Community /></ProtectedRoute>)} />
+                  <Route path="community/:id" element={withPageLoader(<ProtectedRoute><CommunityPost /></ProtectedRoute>)} />
                   <Route path="about" element={withPageLoader(<About />)} />
                   <Route path="how-it-works" element={withPageLoader(<HowItWorks />)} />
                   <Route path="login" element={withPageLoader(<Auth />)} />
                   <Route path="signup" element={withPageLoader(<Auth />)} />
                   <Route path="forgot-password" element={withPageLoader(<ForgotPassword />)} />
+                  <Route path="reset-password" element={withPageLoader(<ResetPassword />)} />
                   <Route path="pricing" element={withPageLoader(<Pricing />)} />
                   <Route path="blog" element={withPageLoader(<Blog />)} />
                   <Route path="contact" element={withPageLoader(<Contact />)} />
@@ -98,6 +105,7 @@ export default function App() {
                     <Route path="listings" element={<DashboardListings />} />
                     <Route path="groups" element={<DashboardGroups />} />
                     <Route path="orders" element={<DashboardOrders />} />
+                    <Route path="requests" element={<DashboardRequests />} />
                     <Route path="saved" element={<DashboardSaved />} />
                     <Route path="settings" element={<DashboardSettings />} />
                   </Route>

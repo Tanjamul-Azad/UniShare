@@ -28,6 +28,7 @@ import notificationsRouter from "./routes/notifications.js";
 import messagesRouter from "./routes/messages.js";
 import adminRouter from "./routes/admin.js";
 import sslcommerzRouter from "./routes/sslcommerz.js";
+import communityRouter from "./routes/community.js";
 
 async function startServer() {
   const app = express();
@@ -41,9 +42,9 @@ async function startServer() {
 
   const PORT = Number(process.env.PORT ?? "3000");
 
-  // ── Body parsing (10 mb limit for base64 ID images) ───────────────
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true }));
+  // ── Body parsing (25 mb limit for base64 ID images & community media) ──
+  app.use(express.json({ limit: "25mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
   // ── Development CSP & Well-Known Path Fix ───────────────────────────
   app.use((req, res, next) => {
@@ -75,12 +76,14 @@ async function startServer() {
   app.use("/api/reviews", reviewsRouter);
   app.use("/api/favorites", favoritesRouter);
   app.use("/api/seller", sellerRouter);
-  app.use("/api/requests", requestsRouter);
+  // requestsRouter defines /borrow-requests/ and /trade-proposals/ at top level
+  app.use("/api", requestsRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/messages", messagesRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/payment", sslcommerzRouter);
+  app.use("/api/community", communityRouter);
 
   // Catch-all for missing API routes to log them clearly
   app.use("/api/*", (req, res) => {

@@ -172,3 +172,54 @@ CREATE TABLE IF NOT EXISTS trade_proposals (
   created_at  TEXT NOT NULL DEFAULT (datetime('now')),
   reviewed_at TEXT
 );
+
+-- ============================================================
+-- Campus Community feed
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS community_posts (
+  id          TEXT PRIMARY KEY,
+  author_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content     TEXT,
+  category    TEXT NOT NULL DEFAULT 'general'
+              CHECK(category IN ('general','help','lost_found','event','study','housing')),
+  is_urgent   INTEGER NOT NULL DEFAULT 0,
+  is_resolved INTEGER NOT NULL DEFAULT 0,
+  location    TEXT,
+  media_url   TEXT,
+  media_type  TEXT CHECK(media_type IN ('image','video')),
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_community_posts_created ON community_posts(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS community_comments (
+  id         TEXT PRIMARY KEY,
+  post_id    TEXT NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  author_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content    TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_community_comments_post ON community_comments(post_id);
+
+CREATE TABLE IF NOT EXISTS community_likes (
+  id         TEXT PRIMARY KEY,
+  post_id    TEXT NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(post_id, user_id)
+);
+
+-- ============================================================
+-- Password reset tokens (hashed; single-use; time-limited)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  used        INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_hash ON password_reset_tokens(token_hash);

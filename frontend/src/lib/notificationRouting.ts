@@ -6,6 +6,8 @@ export function getNotificationTarget(type: string): string {
       return '/profile';
     case 'group_update':
       return '/co-subs';
+    case 'community':
+      return '/community';
     default:
       return '/notifications';
   }
@@ -19,6 +21,8 @@ export function getNotificationActionLabel(type: string): string {
       return 'View Order Status';
     case 'group_update':
       return 'Open Group Listings';
+    case 'community':
+      return 'Open Community';
     default:
       return 'Open';
   }

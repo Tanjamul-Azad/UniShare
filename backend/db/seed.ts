@@ -224,6 +224,77 @@ export function seedDatabase(db: Database) {
 
   const orderItems: any[] = [];
 
+  const hoursAgo = (h: number) =>
+    new Date(Date.now() - h * 3600 * 1000).toISOString();
+
+  const communityPosts = [
+    {
+      id: "cp-seed-1",
+      authorId: "u-student2",
+      content:
+        "Need a scientific calculator (FX-991) for my CSE 221 exam starting at 2 PM. Can borrow for just 2 hours 🙏",
+      category: "help",
+      isUrgent: 1,
+      location: "Building B, Room 402",
+      createdAt: hoursAgo(1),
+    },
+    {
+      id: "cp-seed-2",
+      authorId: "u-student1",
+      content:
+        "Found a black UIU lanyard with a set of keys near the library entrance. DM to claim!",
+      category: "lost_found",
+      isUrgent: 0,
+      location: "Central Library",
+      createdAt: hoursAgo(3),
+    },
+    {
+      id: "cp-seed-3",
+      authorId: "u-seller",
+      content:
+        "Robotics Club meetup this Thursday 4 PM — bring your project ideas and questions. Free pizza 🍕",
+      category: "event",
+      isUrgent: 0,
+      location: "Auditorium",
+      createdAt: hoursAgo(6),
+    },
+    {
+      id: "cp-seed-4",
+      authorId: "u-buyer",
+      content:
+        "Forming a study group for Database Systems (CSE 311) before midterms. Comment if you want in!",
+      category: "study",
+      isUrgent: 0,
+      location: null,
+      createdAt: hoursAgo(20),
+    },
+  ];
+
+  const communityComments = [
+    {
+      id: "cc-seed-1",
+      postId: "cp-seed-1",
+      authorId: "u-buyer",
+      content: "I have one and I'm in Building B right now — coming up to you!",
+      createdAt: hoursAgo(0.8),
+    },
+    {
+      id: "cc-seed-2",
+      postId: "cp-seed-4",
+      authorId: "u-student2",
+      content: "Count me in, I really need the practice.",
+      createdAt: hoursAgo(18),
+    },
+  ];
+
+  const communityLikes = [
+    { id: "cl-seed-1", postId: "cp-seed-1", userId: "u-buyer" },
+    { id: "cl-seed-2", postId: "cp-seed-1", userId: "u-seller" },
+    { id: "cl-seed-3", postId: "cp-seed-3", userId: "u-buyer" },
+    { id: "cl-seed-4", postId: "cp-seed-3", userId: "u-student2" },
+    { id: "cl-seed-5", postId: "cp-seed-4", userId: "u-student2" },
+  ];
+
   const insertUser = db.prepare(`
     INSERT INTO users (
       id, name, email, password_hash, role, avatar, phone, address, bio,
@@ -273,6 +344,21 @@ export function seedDatabase(db: Database) {
       id, order_id, item_id, price_at_purchase, status
     ) VALUES (?, ?, ?, ?, ?)
   `);
+
+  const insertCommunityPost = db.prepare(`
+    INSERT INTO community_posts (
+      id, author_id, content, category, is_urgent, location, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertCommunityComment = db.prepare(`
+    INSERT INTO community_comments (id, post_id, author_id, content, created_at)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  const insertCommunityLike = db.prepare(
+    "INSERT INTO community_likes (id, post_id, user_id) VALUES (?, ?, ?)",
+  );
 
   const seedTx = db.transaction(() => {
     for (const user of users) {
@@ -368,6 +454,32 @@ export function seedDatabase(db: Database) {
         item.priceAtPurchase,
         item.status,
       );
+    }
+
+    for (const post of communityPosts) {
+      insertCommunityPost.run(
+        post.id,
+        post.authorId,
+        post.content,
+        post.category,
+        post.isUrgent,
+        post.location,
+        post.createdAt,
+      );
+    }
+
+    for (const comment of communityComments) {
+      insertCommunityComment.run(
+        comment.id,
+        comment.postId,
+        comment.authorId,
+        comment.content,
+        comment.createdAt,
+      );
+    }
+
+    for (const like of communityLikes) {
+      insertCommunityLike.run(like.id, like.postId, like.userId);
     }
   });
 

@@ -15,6 +15,7 @@ import {
   Inbox,
   Sparkles,
   Plus,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
@@ -110,6 +111,8 @@ export default function Overview() {
   const vc = verificationConfig[verificationStatus as keyof typeof verificationConfig] ?? verificationConfig.unverified;
   const BannerIcon = vc.icon;
 
+  const pendingRequests = stats?.pendingRequestsCount ?? 0;
+
   const statCards = [
     {
       label: "My Listings",
@@ -126,6 +129,14 @@ export default function Overview() {
       to: "/dashboard/groups",
       accent: "bg-blue-50 text-blue-600",
       ring: "ring-blue-100",
+    },
+    {
+      label: "Requests",
+      value: isLoading ? null : pendingRequests,
+      icon: ArrowLeftRight,
+      to: "/dashboard/requests",
+      accent: "bg-indigo-50 text-indigo-600",
+      ring: "ring-indigo-100",
     },
     {
       label: "Saved Items",
@@ -234,8 +245,33 @@ export default function Overview() {
         </div>
       </div>
 
+      {/* Pending requests prompt */}
+      {pendingRequests > 0 && (
+        <Link
+          to="/dashboard/requests"
+          className="flex items-center justify-between gap-4 rounded-2xl border border-indigo-200 bg-linear-to-r from-indigo-50 to-transparent p-4 sm:p-5 hover:border-indigo-300 transition-colors"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
+              <ArrowLeftRight className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-indigo-900">
+                {pendingRequests} request{pendingRequests !== 1 ? "s" : ""} awaiting your response
+              </p>
+              <p className="text-xs mt-0.5 text-indigo-600">
+                Borrow &amp; trade requests on your listings need a decision.
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-colors shrink-0 shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white">
+            Review <ArrowRight className="w-3.5 h-3.5" />
+          </span>
+        </Link>
+      )}
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statCards.map((card, i) => (
           <motion.div
             key={card.label}

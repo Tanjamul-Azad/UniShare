@@ -15,13 +15,15 @@ import {
   Menu,
   X,
   ChevronRight,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import PageLoader from "./PageLoader";
 import ResponsiveImage from "./ResponsiveImage";
-import { updateUserProfile } from "../lib/api";
+import { updateUserProfile, getIncomingRequests } from "../lib/api";
+import { useApiQuery } from "../hooks/useApiQuery";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -29,6 +31,16 @@ export default function DashboardLayout() {
   const { unreadNotificationsCount, unreadThreadCount } = useSocket();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Shares its cache key with the Requests panel, so it loads once.
+  const { data: incomingRequests = [] } = useApiQuery({
+    queryKey: ["incoming-requests"],
+    queryFn: getIncomingRequests,
+    staleTime: 30_000,
+  });
+  const pendingRequests = incomingRequests.filter(
+    (r) => r.status === "pending",
+  ).length;
 
   const handleLogout = () => {
     logout();
@@ -84,6 +96,12 @@ export default function DashboardLayout() {
       to: "/dashboard/orders",
       label: "Order History",
       icon: ShoppingBag,
+    },
+    {
+      to: "/dashboard/requests",
+      label: "Requests",
+      icon: ArrowLeftRight,
+      badge: pendingRequests > 0 ? pendingRequests : undefined,
     },
     {
       to: "/dashboard/saved",
@@ -204,6 +222,15 @@ export default function DashboardLayout() {
                   className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-700"}`}
                 />
                 <span className="flex-1">{link.label}</span>
+                {"badge" in link && link.badge !== undefined && link.badge > 0 && (
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center ${
+                      isActive ? "bg-white/25 text-white" : "bg-indigo-600 text-white"
+                    }`}
+                  >
+                    {link.badge > 99 ? "99+" : link.badge}
+                  </span>
+                )}
               </>
             )}
           </NavLink>

@@ -45,6 +45,21 @@ router.get("/stats", requireAuth, (req, res) => {
       .get(userId) as any
   ).count as number;
 
+  // Pending borrow + trade requests awaiting my response (on items I own)
+  const pendingRequestsCount = (
+    db
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM borrow_requests br
+              JOIN marketplace_items m ON br.item_id = m.id
+              WHERE m.seller_id = ? AND br.status = 'pending')
+         + (SELECT COUNT(*) FROM trade_proposals tp
+              JOIN marketplace_items m ON tp.item_id = m.id
+              WHERE m.seller_id = ? AND tp.status = 'pending') AS count`,
+      )
+      .get(userId, userId) as any
+  ).count as number;
+
   // Global Stats (only for admins)
   let globalStats = null;
   if (isAdmin) {
@@ -89,6 +104,7 @@ router.get("/stats", requireAuth, (req, res) => {
     savedCount,
     unreadMessages,
     unreadNotifications,
+    pendingRequestsCount,
     recentNotifications,
     recentActivity,
     globalStats

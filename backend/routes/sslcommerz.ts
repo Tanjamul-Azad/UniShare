@@ -12,12 +12,28 @@ const store_passwd =
   process.env.SSLCOMMERZ_STORE_PASSWORD || "test67c71e227038e@ssl";
 const is_live = process.env.SSLCOMMERZ_IS_LIVE === "true";
 
-// Dynamically determine BASE_URL if not in env
+// Dynamically determine BASE_URL (backend) if not in env
 const getBaseUrl = (req: Request) => {
   if (process.env.BASE_URL) return process.env.BASE_URL;
   const host = req.get("host");
   const protocol = req.protocol;
   return `${protocol}://${host}`;
+};
+
+// Prefer explicit frontend URL, otherwise infer from request headers
+const getFrontendBaseUrl = (req: Request) => {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  const origin = req.get("origin");
+  if (origin) return origin;
+  const referer = req.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin;
+    } catch {
+      // Ignore malformed referers
+    }
+  }
+  return getBaseUrl(req);
 };
 
 const FEE_RATE = 0.05;
@@ -93,7 +109,7 @@ router.post("/init", requireAuth, async (req: Request, res: Response) => {
       }
 
       const preferredMethod = req.body.method || "card";
-      const mockUrl = `${getBaseUrl(req)}/#/mock-gateway?tran_id=${tran_id}&total=${total}&method=${preferredMethod}`;
+      const mockUrl = `${getFrontendBaseUrl(req)}/#/mock-gateway?tran_id=${tran_id}&total=${total}&method=${preferredMethod}`;
       console.log(`[SSLCommerz] Mock URL: ${mockUrl}`);
       res.json({ url: mockUrl });
       return;
@@ -265,15 +281,15 @@ router.post("/success", async (req: Request, res: Response) => {
         }
       }
 
-      res.redirect(`${getBaseUrl(req)}/#/order-success?orderId=${tran_id}`);
+      res.redirect(`${getFrontendBaseUrl(req)}/#/order-success?orderId=${tran_id}`);
     } else {
       res.redirect(
-        `${getBaseUrl(req)}/#/checkout?error=Payment validation failed`,
+        `${getFrontendBaseUrl(req)}/#/checkout?error=Payment validation failed`,
       );
     }
   } catch (err) {
     console.error("[Payment] Error in success route:", err);
-    res.redirect(`${getBaseUrl(req)}/#/checkout?error=Internal server error`);
+    res.redirect(`${getFrontendBaseUrl(req)}/#/checkout?error=Internal server error`);
   }
 });
 
@@ -281,13 +297,13 @@ router.post("/success", async (req: Request, res: Response) => {
 router.post("/fail", (req: Request, res: Response) => {
   const { tran_id } = req.body;
   res.redirect(
-    `${getBaseUrl(req)}/#/checkout?error=Payment failed&tran_id=${tran_id}`,
+    `${getFrontendBaseUrl(req)}/#/checkout?error=Payment failed&tran_id=${tran_id}`,
   );
 });
 
 // POST /api/payment/cancel
 router.post("/cancel", (req: Request, res: Response) => {
-  res.redirect(`${getBaseUrl(req)}/#/checkout?error=Payment cancelled`);
+  res.redirect(`${getFrontendBaseUrl(req)}/#/checkout?error=Payment cancelled`);
 });
 
 export default router;

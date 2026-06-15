@@ -26,7 +26,8 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { useApiQuery } from "../hooks/useApiQuery";
-import { getMarketplaceItems, updateUserProfile } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { getMarketplaceItems, updateUserProfile, confirmOrderItem } from "../lib/api";
 import { MarketplaceItem } from "../lib/types";
 import { Link } from "react-router-dom";
 import BackButton from "../components/BackButton";
@@ -107,6 +108,7 @@ export default function Profile() {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: marketplaceItems = [] } = useApiQuery<MarketplaceItem[]>({
     queryKey: ["marketplace-items"],
@@ -501,15 +503,12 @@ export default function Profile() {
                             
                             if (!confirm(`Mark this order as ${nextStatus}?`)) return;
                             try {
-                              const res = await fetch(`/api/orders/items/${sale.id}/confirm`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ 
-                                  status: nextStatus,
-                                  note: `Order ${nextStatus} via UniShare.` 
-                                })
-                              });
-                              if (res.ok) window.location.reload();
+                              await confirmOrderItem(
+                                sale.id,
+                                `Order ${nextStatus} via UniShare.`,
+                                nextStatus,
+                              );
+                              await queryClient.invalidateQueries({ queryKey: ["sales"] });
                             } catch (e) { alert("Failed to update status"); }
                           }}
                           className={`px-3 py-1.5 text-white text-[10px] font-bold rounded-lg transition-colors ${

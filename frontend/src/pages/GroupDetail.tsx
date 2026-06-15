@@ -9,12 +9,14 @@ import type { SubscriptionGroup } from '../lib/types';
 import { useApiQuery } from '../hooks/useApiQuery';
 import QueryErrorState from '../components/QueryErrorState';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import VerificationModal from '../components/VerificationModal';
 
 const iconMap: Record<string, any> = { Music, Tv, BookOpen, FileText, PenTool };
 
 export default function GroupDetail() {
   const { user } = useAuth();
+  const { success } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isJoining, setIsJoining] = React.useState(false);
@@ -69,7 +71,8 @@ export default function GroupDetail() {
     setJoinError(null);
     try {
       await joinSubscriptionGroup(id);
-      navigate('/checkout');
+      await refetch();
+      success("You've joined this group. The owner will share access once it's ready.");
     } catch (err: any) {
       setJoinError(err?.message ?? 'Could not join this group.');
     } finally {

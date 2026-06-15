@@ -40,7 +40,7 @@ export default function Cart() {
     );
   }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price ?? 0), 0);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
@@ -74,7 +74,7 @@ export default function Cart() {
                       <MessageSquare className="w-3.5 h-3.5" /> Message Seller
                     </Link>
                   </div>
-                    <span className="font-semibold text-gray-900">৳{item.price.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-900">৳{(item.price ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-end">
                   <button

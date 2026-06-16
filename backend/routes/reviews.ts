@@ -81,9 +81,29 @@ router.post(
         rating,
         comment ?? null,
       );
-      res
-        .status(201)
-        .json({ id, reviewerId: req.user!.id, sellerId, rating, comment });
+      const row = db
+        .prepare(
+          `
+        SELECT r.*, u.name AS reviewer_name, u.avatar AS reviewer_avatar, m.title AS item_title
+        FROM reviews r
+        LEFT JOIN users u ON r.reviewer_id = u.id
+        LEFT JOIN marketplace_items m ON r.item_id = m.id
+        WHERE r.id = ?
+      `,
+        )
+        .get(id) as any;
+      res.status(201).json({
+        id: row.id,
+        reviewerId: row.reviewer_id,
+        reviewerName: row.reviewer_name,
+        reviewerAvatar: row.reviewer_avatar ?? undefined,
+        sellerId: row.seller_id,
+        itemId: row.item_id ?? undefined,
+        itemTitle: row.item_title ?? undefined,
+        rating: row.rating,
+        comment: row.comment ?? undefined,
+        createdAt: row.created_at,
+      });
     } catch (err: any) {
       res.status(500).json({ detail: err.message });
     }

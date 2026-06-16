@@ -17,10 +17,11 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const { unreadThreadCount } = useSocket();
+  const isAdmin = user?.role === 'admin';
   const { data: cartItems = [] } = useApiQuery<MarketplaceItem[]>({
     queryKey: ['cart-preview-items'],
     queryFn: getCartPreviewItems,
-    enabled: Boolean(user),
+    enabled: Boolean(user) && !isAdmin,
   });
 
   useEffect(() => {
@@ -126,14 +127,16 @@ export default function Layout() {
                   )}
                 </Link>
                 <NotificationsDropdown />
-                <Link to="/cart" className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors" title="Cart">
-                  <ShoppingCart className="w-5 h-5" />
-                  {cartItems.length > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
-                      {cartItems.length > 9 ? '9+' : cartItems.length}
-                    </span>
-                  )}
-                </Link>
+                {!isAdmin && (
+                  <Link to="/cart" className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors" title="Cart">
+                    <ShoppingCart className="w-5 h-5" />
+                    {cartItems.length > 0 && (
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                        {cartItems.length > 9 ? '9+' : cartItems.length}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 {user.role === 'admin' && (
                   <Link
                     to="/admin"

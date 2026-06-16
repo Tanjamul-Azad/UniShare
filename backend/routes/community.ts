@@ -38,6 +38,11 @@ const ResolveSchema = z.object({
   resolved: z.boolean(),
 });
 
+const ReportSchema = z.object({
+  reason: z.enum(["spam", "harassment", "misinformation", "inappropriate_content", "other"]),
+  description: z.string().trim().max(1000).optional(),
+});
+
 const POST_FIELDS = `
   p.id, p.author_id AS authorId, p.content, p.category,
   p.is_urgent AS isUrgent, p.is_resolved AS isResolved, p.location,
@@ -471,6 +476,56 @@ router.post(
       );
 
       res.status(201).json(comment);
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  },
+);
+
+// ── POST /api/community/:id/report — report a post ────────────────────────
+router.post(
+  "/:id/report",
+  requireAuth,
+  validate(ReportSchema),
+  (req: Request, res: Response) => {
+    try {
+      const me = req.user!.id;
+
+      if (req.user?.role === "admin") {
+        res.status(403).json({ detail: "Administrators do not report posts — use the Admin Panel to take action directly." });
+        return;
+      }
+
+      const post = db
+        .prepare("SELECT id, author_id FROM community_posts WHERE id = ?")
+        .get(req.params.id) as any;
+      if (!post) {
+        res.status(404).json({ detail: "Post not found" });
+        return;
+      }
+
+      if (post.author_id === me) {
+        res.status(400).json({ detail: "You cannot report your own post." });
+        return;
+      }
+
+      const { reason, description } = req.body;
+      const id = `rpt-${crypto.randomUUID().replace(/-/g, "").slice(0, 14)}`;
+
+      try {
+        db.prepare(
+          `INSERT INTO community_reports (id, post_id, reporter_id, reason, description)
+           VALUES (?, ?, ?, ?, ?)`,
+        ).run(id, req.params.id, me, reason, description?.trim() || null);
+      } catch (e: any) {
+        if (e.message?.includes("UNIQUE")) {
+          res.status(409).json({ detail: "You have already reported this post." });
+          return;
+        }
+        throw e;
+      }
+
+      res.status(201).json({ message: "Report submitted. Our team will review it shortly." });
     } catch (err: any) {
       res.status(500).json({ detail: err.message });
     }

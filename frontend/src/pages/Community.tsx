@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "../lib/utils";
 import { useApiQuery } from "../hooks/useApiQuery";
 import { useSocket } from "../context/SocketContext";
+import { useAuth } from "../context/AuthContext";
 import {
   getCommunityFeed,
   type CommunityPost,
@@ -24,6 +25,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 export default function Community() {
+  const { user } = useAuth();
   const { socket } = useSocket();
   const queryClient = useQueryClient();
 
@@ -138,9 +140,11 @@ export default function Community() {
       </div>
 
       {/* Composer */}
-      <div className="mb-5">
-        <PostComposer onPosted={addPost} />
-      </div>
+      {user?.role !== 'admin' && (
+        <div className="mb-5">
+          <PostComposer onPosted={addPost} />
+        </div>
+      )}
 
       {/* Filters + search */}
       <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-[#FAFAFA]/90 backdrop-blur-sm border-b border-gray-100/80">

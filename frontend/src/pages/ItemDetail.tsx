@@ -79,6 +79,7 @@ export default function ItemDetail() {
     return <div className="text-center py-20 text-gray-500">Item not found</div>;
   }
 
+  const isAdmin = user?.role === 'admin';
   const isOwner = Boolean(item && user?.id && item.sellerId === user.id);
   const isInCart = Boolean(item && cartItems.some((cartItem) => cartItem.id === item.id));
 
@@ -430,7 +431,14 @@ export default function ItemDetail() {
                     </div>
                   )}
 
-                  {!isOwner && (
+                  {!isOwner && isAdmin && (
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      Admin accounts cannot buy, borrow, or trade items.
+                    </div>
+                  )}
+
+                  {!isOwner && !isAdmin && (
                     <div className="space-y-3">
                       {item?.type === 'sell' && (
                         <>
@@ -475,8 +483,8 @@ export default function ItemDetail() {
                       )}
 
                       {item?.type === 'barter' && (
-                        <button 
-                          onClick={handleProposeTrade} 
+                        <button
+                          onClick={handleProposeTrade}
                           disabled={isTrading}
                           className="w-full py-4 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
                         >
@@ -486,6 +494,7 @@ export default function ItemDetail() {
                       )}
                     </div>
                   )}
+
                 </div>
 
                 {!isOwner && (

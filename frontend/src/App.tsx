@@ -48,6 +48,7 @@ const AdminVerificationQueue = lazy(() => import('./pages/admin/VerificationQueu
 const AdminManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
+const AdminReports = lazy(() => import('./pages/admin/Reports'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
@@ -121,6 +122,7 @@ export default function App() {
                     <Route path="verification" element={<AdminVerificationQueue />} />
                     <Route path="users" element={<AdminManageUsers />} />
                     <Route path="listings" element={<AdminListings />} />
+                    <Route path="reports" element={<AdminReports />} />
                   </Route>
                   <Route path="profile" element={withPageLoader(<ProtectedRoute><Profile /></ProtectedRoute>)} />
                   <Route path="cart" element={withPageLoader(<ProtectedRoute><Cart /></ProtectedRoute>)} />

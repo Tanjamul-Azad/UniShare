@@ -1,14 +1,28 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Trash2, ArrowRight, MessageSquare } from 'lucide-react';
+import { Trash2, ArrowRight, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import { getCartPreviewItems, removeFromCart, type MarketplaceItem } from '../lib/api';
 import { useApiQuery } from '../hooks/useApiQuery';
 import QueryErrorState from '../components/QueryErrorState';
 import ResponsiveImage from '../components/ResponsiveImage';
+import { useAuth } from '../context/AuthContext';
 
 export default function Cart() {
+  const { user } = useAuth();
+
+  if (user?.role === 'admin') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
+          <ShieldCheck className="w-7 h-7 text-indigo-600" />
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Admin accounts cannot shop</h2>
+        <p className="text-gray-500 text-sm">Administrators are not permitted to participate in marketplace activities. Use a regular student account to buy or sell items.</p>
+      </div>
+    );
+  }
   const [removingId, setRemovingId] = React.useState<string | null>(null);
   const { data: cartItems = [], isError, refetch } = useApiQuery<MarketplaceItem[]>({
     queryKey: ['cart-preview-items'],

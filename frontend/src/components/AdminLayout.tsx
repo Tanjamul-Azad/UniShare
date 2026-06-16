@@ -2,7 +2,7 @@ import { Suspense, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LogOut, ShieldCheck, Users, ClipboardList,
-  ChevronRight, BarChart3, X, Menu, User,
+  ChevronRight, BarChart3, X, Menu, User, Flag,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ResponsiveImage from "./ResponsiveImage";
@@ -13,6 +13,7 @@ const navLinks = [
   { to: "/admin/verification", label: "Verification Queue", icon: ShieldCheck },
   { to: "/admin/users", label: "Manage Users", icon: Users },
   { to: "/admin/listings", label: "All Listings", icon: ClipboardList },
+  { to: "/admin/reports", label: "Community Reports", icon: Flag },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

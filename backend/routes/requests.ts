@@ -134,6 +134,10 @@ router.post(
   validate(BorrowRequestSchema),
   (req: Request, res: Response) => {
     try {
+      if (req.user?.role === "admin") {
+        res.status(403).json({ detail: "Administrators cannot submit borrow requests." });
+        return;
+      }
       const { itemId, message } = req.body;
       const requesterId = req.user!.id;
 
@@ -198,6 +202,10 @@ router.post(
   validate(TradeProposalSchema),
   (req: Request, res: Response) => {
     try {
+      if (req.user?.role === "admin") {
+        res.status(403).json({ detail: "Administrators cannot submit trade proposals." });
+        return;
+      }
       const { itemId, offerDescription } = req.body;
       const proposerId = req.user!.id;
 

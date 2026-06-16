@@ -1,7 +1,7 @@
 import type { Database } from "better-sqlite3";
 import bcrypt from "bcryptjs";
 
-const DEFAULT_PASSWORD = "Admin1234";
+const DEFAULT_PASSWORD = "admin123";
 
 export function seedDatabase(db: Database) {
   const existing = db

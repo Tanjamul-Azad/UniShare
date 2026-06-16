@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import { ArrowLeft, ShieldCheck, Users, Key } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Users, Key, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { createSubscriptionGroup } from '../lib/api';
@@ -24,6 +24,18 @@ export default function NewGroup() {
   const [totalSpotsInput, setTotalSpotsInput] = useState(4);
 
   const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
+
+  if (user?.role === 'admin') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
+          <Shield className="w-7 h-7 text-indigo-600" />
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Admin accounts cannot create groups</h2>
+        <p className="text-gray-500 text-sm">Administrators are not permitted to create or join co-subscription groups.</p>
+      </div>
+    );
+  }
 
   const createGroupMutation = useMutation({
     mutationFn: createSubscriptionGroup,

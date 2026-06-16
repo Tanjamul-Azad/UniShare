@@ -211,6 +211,24 @@ CREATE TABLE IF NOT EXISTS community_likes (
 );
 
 -- ============================================================
+-- Community post reports
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS community_reports (
+  id           TEXT PRIMARY KEY,
+  post_id      TEXT NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  reporter_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason       TEXT NOT NULL CHECK(reason IN ('spam','harassment','misinformation','inappropriate_content','other')),
+  description  TEXT,
+  status       TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','banned','restricted','dismissed')),
+  reviewed_by  TEXT REFERENCES users(id),
+  reviewed_at  TEXT,
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(post_id, reporter_id)
+);
+CREATE INDEX IF NOT EXISTS idx_community_reports_status ON community_reports(status);
+
+-- ============================================================
 -- Password reset tokens (hashed; single-use; time-limited)
 -- ============================================================
 

@@ -104,7 +104,11 @@ router.post(
   validate(CreateListingSchema),
   (req: Request, res: Response) => {
     try {
-      if (req.user?.verificationStatus !== 'verified' && req.user?.role !== 'admin') {
+      if (req.user?.role === "admin") {
+        res.status(403).json({ detail: "Administrators cannot create listings." });
+        return;
+      }
+      if (req.user?.verificationStatus !== 'verified') {
         res.status(403).json({ detail: "Only verified users can create listings." });
         return;
       }

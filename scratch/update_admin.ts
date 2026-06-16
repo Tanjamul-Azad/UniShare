@@ -8,7 +8,7 @@ const db = new Database(DB_PATH);
 
 const targetEmail = "i.m.tanjamul@gmail.com";
 const newName = "Admin";
-const newPassword = "Admin1234";
+const newPassword = "admin123";
 const passwordHash = bcrypt.hashSync(newPassword, 10);
 
 try {

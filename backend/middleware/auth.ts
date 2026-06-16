@@ -39,10 +39,15 @@ export function requireAuth(
   try {
     const payload = jwt.verify(header.slice(7), JWT_SECRET) as JwtPayload;
     // Fetch fresh user data to prevent stale JWT bugs (e.g. verification status changes)
-    const dbUser = db.prepare("SELECT role, verification_status, name FROM users WHERE id = ?").get(payload.id) as any;
-    
+    const dbUser = db.prepare("SELECT role, verification_status, name, account_status FROM users WHERE id = ?").get(payload.id) as any;
+
     if (!dbUser) {
       res.status(401).json({ detail: "User no longer exists" });
+      return;
+    }
+
+    if (dbUser.account_status === "banned") {
+      res.status(403).json({ detail: "Your account has been banned. Please contact support." });
       return;
     }
 
@@ -50,8 +55,9 @@ export function requireAuth(
       ...payload,
       role: dbUser.role,
       verificationStatus: dbUser.verification_status,
-      name: dbUser.name
-    };
+      name: dbUser.name,
+      accountStatus: dbUser.account_status ?? "active",
+    } as any;
     next();
   } catch {
     res.status(401).json({ detail: "Invalid or expired token" });

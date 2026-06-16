@@ -36,6 +36,9 @@ import {
   CommunityCategory,
   CommunityMediaType,
   CreateCommunityPostInput,
+  CommunityReport,
+  CommunityReportReason,
+  CommunityReportStatus,
 } from "./types";
 
 export type {
@@ -68,6 +71,9 @@ export type {
   CommunityCategory,
   CommunityMediaType,
   CreateCommunityPostInput,
+  CommunityReport,
+  CommunityReportReason,
+  CommunityReportStatus,
 };
 
 /**
@@ -911,5 +917,40 @@ export async function addCommunityComment(
 export async function deleteCommunityComment(commentId: string): Promise<void> {
   await apiClient<void>(`/community/comments/${commentId}`, {
     method: "DELETE",
+  });
+}
+
+export async function reportCommunityPost(
+  postId: string,
+  reason: CommunityReportReason,
+  description?: string,
+): Promise<{ message: string }> {
+  return apiClient<{ message: string }>(`/community/${postId}/report`, {
+    method: "POST",
+    data: { reason, description },
+  });
+}
+
+export async function getAdminReports(): Promise<CommunityReport[]> {
+  return apiClient<CommunityReport[]>("/admin/reports");
+}
+
+export async function resolveAdminReport(
+  reportId: string,
+  action: "dismissed" | "banned" | "restricted",
+): Promise<CommunityReport> {
+  return apiClient<CommunityReport>(`/admin/reports/${reportId}`, {
+    method: "PATCH",
+    data: { action },
+  });
+}
+
+export async function updateUserAccountStatus(
+  userId: string,
+  status: "active" | "banned" | "restricted",
+): Promise<{ id: string; accountStatus: string }> {
+  return apiClient<{ id: string; accountStatus: string }>(`/admin/users/${userId}/status`, {
+    method: "PATCH",
+    data: { status },
   });
 }

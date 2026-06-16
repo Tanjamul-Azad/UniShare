@@ -1,8 +1,18 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { requireAdmin } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
 import db from "../db/index.js";
 
 const router = Router();
+
+const ResolveReportSchema = z.object({
+  action: z.enum(["dismissed", "banned", "restricted"]),
+});
+
+const UpdateUserStatusSchema = z.object({
+  status: z.enum(["active", "banned", "restricted"]),
+});
 
 router.get("/stats", requireAdmin, (req, res) => {
   console.log(`[admin] Stats requested by ${req.user?.email}`);
@@ -25,6 +35,10 @@ router.get("/stats", requireAdmin, (req, res) => {
 
     const totalListings = (
       db.prepare("SELECT COUNT(*) as count FROM marketplace_items WHERE is_active = 1").get() as any
+    ).count;
+
+    const pendingReports = (
+      db.prepare("SELECT COUNT(*) as count FROM community_reports WHERE status = 'pending'").get() as any
     ).count;
 
     const recentVerifications = db
@@ -63,6 +77,7 @@ router.get("/stats", requireAdmin, (req, res) => {
       pendingVerifications,
       rejectedVerifications,
       totalListings,
+      pendingReports,
       recentVerifications,
       recentListings,
       recentUsers,
@@ -72,5 +87,110 @@ router.get("/stats", requireAdmin, (req, res) => {
     res.status(500).json({ detail: err.message });
   }
 });
+
+// GET /api/admin/reports — all community reports
+router.get("/reports", requireAdmin, (_req: Request, res: Response) => {
+  try {
+    const reports = db.prepare(
+      `SELECT
+        r.id, r.reason, r.description, r.status,
+        r.created_at AS createdAt, r.reviewed_at AS reviewedAt,
+        p.id AS postId, p.content AS postContent, p.category AS postCategory,
+        p.created_at AS postCreatedAt,
+        author.id AS reportedUserId, author.name AS reportedUserName, author.email AS reportedUserEmail,
+        author.account_status AS reportedUserStatus,
+        reporter.id AS reporterId, reporter.name AS reporterName, reporter.email AS reporterEmail,
+        reviewer.name AS reviewerName
+       FROM community_reports r
+       JOIN community_posts p ON r.post_id = p.id
+       JOIN users author ON p.author_id = author.id
+       JOIN users reporter ON r.reporter_id = reporter.id
+       LEFT JOIN users reviewer ON r.reviewed_by = reviewer.id
+       ORDER BY CASE r.status WHEN 'pending' THEN 0 ELSE 1 END, r.created_at DESC`
+    ).all() as any[];
+    res.json(reports);
+  } catch (err: any) {
+    res.status(500).json({ detail: err.message });
+  }
+});
+
+// PATCH /api/admin/reports/:id — resolve a report (dismiss / ban / restrict)
+router.patch(
+  "/reports/:id",
+  requireAdmin,
+  validate(ResolveReportSchema),
+  (req: Request, res: Response) => {
+    try {
+      const report = db
+        .prepare("SELECT r.*, p.author_id FROM community_reports r JOIN community_posts p ON r.post_id = p.id WHERE r.id = ?")
+        .get(req.params.id) as any;
+
+      if (!report) {
+        res.status(404).json({ detail: "Report not found" });
+        return;
+      }
+
+      const { action } = req.body;
+      const now = new Date().toISOString();
+
+      db.prepare(
+        "UPDATE community_reports SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?"
+      ).run(action, req.user!.id, now, req.params.id);
+
+      if (action === "banned" || action === "restricted") {
+        db.prepare(
+          "UPDATE users SET account_status = ? WHERE id = ?"
+        ).run(action, report.author_id);
+      }
+
+      const updated = db
+        .prepare(
+          `SELECT r.id, r.reason, r.description, r.status,
+                  r.created_at AS createdAt, r.reviewed_at AS reviewedAt,
+                  p.id AS postId, p.content AS postContent, p.category AS postCategory,
+                  p.created_at AS postCreatedAt,
+                  author.id AS reportedUserId, author.name AS reportedUserName, author.email AS reportedUserEmail,
+                  author.account_status AS reportedUserStatus,
+                  reporter.id AS reporterId, reporter.name AS reporterName, reporter.email AS reporterEmail,
+                  reviewer.name AS reviewerName
+           FROM community_reports r
+           JOIN community_posts p ON r.post_id = p.id
+           JOIN users author ON p.author_id = author.id
+           JOIN users reporter ON r.reporter_id = reporter.id
+           LEFT JOIN users reviewer ON r.reviewed_by = reviewer.id
+           WHERE r.id = ?`
+        )
+        .get(req.params.id);
+
+      res.json(updated);
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  }
+);
+
+// PATCH /api/admin/users/:id/status — manually ban/restrict/unban a user
+router.patch(
+  "/users/:id/status",
+  requireAdmin,
+  validate(UpdateUserStatusSchema),
+  (req: Request, res: Response) => {
+    try {
+      if (req.params.id === req.user!.id) {
+        res.status(400).json({ detail: "Cannot change your own account status." });
+        return;
+      }
+      const user = db.prepare("SELECT id FROM users WHERE id = ?").get(req.params.id);
+      if (!user) {
+        res.status(404).json({ detail: "User not found" });
+        return;
+      }
+      db.prepare("UPDATE users SET account_status = ? WHERE id = ?").run(req.body.status, req.params.id);
+      res.json({ id: req.params.id, accountStatus: req.body.status });
+    } catch (err: any) {
+      res.status(500).json({ detail: err.message });
+    }
+  }
+);
 
 export default router;

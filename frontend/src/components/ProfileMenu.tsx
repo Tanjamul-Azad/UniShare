@@ -92,23 +92,25 @@ export default function ProfileMenu() {
               </div>
 
               <motion.nav initial="hidden" animate="visible" exit="hidden" variants={menuListVariants} className="p-2">
-                <motion.div variants={menuItemVariants}>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </span>
-                    {unreadNotificationsCount > 0 ? (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                        {unreadNotificationsCount}
+                {user?.role !== 'admin' && (
+                  <motion.div variants={menuItemVariants}>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
                       </span>
-                    ) : null}
-                  </Link>
-                </motion.div>
+                      {unreadNotificationsCount > 0 ? (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                          {unreadNotificationsCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </motion.div>
+                )}
 
                 {user?.role === 'admin' ? (
                   <motion.div variants={menuItemVariants}>
@@ -205,23 +207,25 @@ export default function ProfileMenu() {
               </div>
 
               <motion.nav initial="hidden" animate="visible" exit="hidden" variants={menuListVariants} className="space-y-1">
-                <motion.div variants={menuItemVariants}>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-gray-700 bg-gray-50"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </span>
-                    {unreadNotificationsCount > 0 ? (
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                        {unreadNotificationsCount}
+                {user?.role !== 'admin' && (
+                  <motion.div variants={menuItemVariants}>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-gray-700 bg-gray-50"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
                       </span>
-                    ) : null}
-                  </Link>
-                </motion.div>
+                      {unreadNotificationsCount > 0 ? (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                          {unreadNotificationsCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </motion.div>
+                )}
                 {user?.role === 'admin' ? (
                   <motion.div variants={menuItemVariants}>
                     <Link

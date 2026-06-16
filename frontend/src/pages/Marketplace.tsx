@@ -10,6 +10,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/utils";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { useFavorites } from "../context/FavoritesContext";
@@ -18,6 +19,7 @@ import { useApiQuery } from "../hooks/useApiQuery";
 import QueryErrorState from "../components/QueryErrorState";
 
 export default function Marketplace() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -181,13 +183,15 @@ export default function Marketplace() {
               </span>
             )}
           </button>
-          <Link
-            to="/marketplace/new"
-            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            List Item
-          </Link>
+          {user?.role !== 'admin' && (
+            <Link
+              to="/marketplace/new"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              List Item
+            </Link>
+          )}
         </div>
       </div>
 

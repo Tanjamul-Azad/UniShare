@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Users, Music, Tv, BookOpen, FileText, PenTool, Key, BadgeCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 import { getSubscriptionGroups, type SubscriptionGroup } from '../lib/api';
 import { useApiQuery } from '../hooks/useApiQuery';
@@ -12,6 +13,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function CoSubs() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const { data: groups = [], isLoading: loading, isError, refetch } = useApiQuery<SubscriptionGroup[]>({
@@ -62,10 +64,12 @@ export default function CoSubs() {
           <h1 className="text-2xl font-semibold text-gray-900 tracking-tight font-display">Co-Subscriptions</h1>
           <p className="text-gray-500 text-sm mt-1 font-body">Share costs for digital services or sublet your unused accounts.</p>
         </div>
-        <Link to="/co-subs/new" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm font-body">
-          <Plus className="w-4 h-4" />
-          List Subscription
-        </Link>
+        {user?.role !== 'admin' && (
+          <Link to="/co-subs/new" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm font-body">
+            <Plus className="w-4 h-4" />
+            List Subscription
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center gap-4">

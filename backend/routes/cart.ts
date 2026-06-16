@@ -21,6 +21,14 @@ const AddToCartSchema = z.object({
   itemId: z.string().min(1),
 });
 
+function blockAdmin(req: Request, res: Response): boolean {
+  if (req.user?.role === "admin") {
+    res.status(403).json({ detail: "Administrators cannot participate in marketplace activities." });
+    return true;
+  }
+  return false;
+}
+
 // GET /api/cart/
 router.get("/", requireAuth, (req: Request, res: Response) => {
   try {
@@ -47,6 +55,7 @@ router.post(
   validate(AddToCartSchema),
   (req: Request, res: Response) => {
     try {
+      if (blockAdmin(req, res)) return;
       const { itemId } = req.body;
       const item = db
         .prepare(

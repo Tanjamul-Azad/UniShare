@@ -17,6 +17,13 @@ db.pragma("foreign_keys = ON");
 const schema = fs.readFileSync(SCHEMA_PATH, "utf-8");
 db.exec(schema);
 
+// Migrations for columns added after initial schema
+const existingCols = (db.prepare("PRAGMA table_info(users)").all() as any[]).map((c: any) => c.name);
+if (!existingCols.includes("account_status")) {
+  db.exec("ALTER TABLE users ADD COLUMN account_status TEXT NOT NULL DEFAULT 'active'");
+  console.log("[db] Migration: added account_status column to users");
+}
+
 seedDatabase(db);
 
 console.log(`[db] Connected → ${DB_PATH}`);

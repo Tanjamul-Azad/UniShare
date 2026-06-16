@@ -14,6 +14,11 @@ router.post("/", requireAuth, (req: Request, res: Response) => {
   try {
     const buyerId = req.user!.id;
 
+    if (req.user?.role === "admin") {
+      res.status(403).json({ detail: "Administrators cannot place orders." });
+      return;
+    }
+
     if (req.user?.verificationStatus !== "verified") {
       res
         .status(403)

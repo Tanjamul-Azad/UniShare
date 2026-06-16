@@ -24,6 +24,7 @@ export default function GroupDetail() {
   const [showVerificationModal, setShowVerificationModal] = React.useState(false);
 
   const isVerified = user?.verificationStatus === 'verified' || user?.isVerified;
+  const isAdmin = user?.role === 'admin';
 
   const { data: group, isLoading: loading, isError, refetch } = useApiQuery<SubscriptionGroup | undefined>({
     queryKey: ['subscription-group', id],
@@ -230,8 +231,13 @@ export default function GroupDetail() {
           </div>
         )}
 
-        {isFull ? (
-          <button 
+        {isAdmin ? (
+          <div className="w-full py-4 px-4 rounded-xl border border-indigo-100 bg-indigo-50 text-sm text-indigo-700 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            Admin accounts cannot join subscription groups.
+          </div>
+        ) : isFull ? (
+          <button
             disabled
             className="w-full py-4 bg-gray-100 text-gray-400 font-medium rounded-xl transition-colors shadow-sm cursor-not-allowed"
           >
@@ -243,8 +249,8 @@ export default function GroupDetail() {
             disabled={isJoining}
             className={cn(
               "w-full py-4 text-white font-medium rounded-xl transition-colors shadow-sm flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed",
-              isSublet 
-                ? "bg-amber-600 hover:bg-amber-700" 
+              isSublet
+                ? "bg-amber-600 hover:bg-amber-700"
                 : "bg-indigo-600 hover:bg-indigo-700"
             )}
           >

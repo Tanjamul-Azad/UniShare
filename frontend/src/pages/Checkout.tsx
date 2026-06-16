@@ -14,6 +14,18 @@ export default function Checkout() {
   const { sendNotification } = useSocket();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  if (user?.role === 'admin') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-5">
+          <ShieldCheck className="w-7 h-7 text-indigo-600" />
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">Admin accounts cannot checkout</h2>
+        <p className="text-gray-500 text-sm">Administrators are not permitted to participate in marketplace activities.</p>
+      </div>
+    );
+  }
   const [error, setError] = React.useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = React.useState<'card' | 'mobile'>('card');
 

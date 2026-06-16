@@ -48,6 +48,7 @@ export interface MockUser {
   name: string;
   email: string;
   role: 'user' | 'admin';
+  accountStatus?: 'active' | 'banned' | 'restricted';
   verificationStatus: 'verified' | 'pending' | 'rejected' | 'unverified';
   isVerified: boolean;
   uiuEmail?: string;
@@ -324,6 +325,36 @@ export type CreateCommunityPostInput = {
   location?: string;
   mediaUrl?: string;
   mediaType?: CommunityMediaType;
+};
+
+export type CommunityReportReason =
+  | 'spam'
+  | 'harassment'
+  | 'misinformation'
+  | 'inappropriate_content'
+  | 'other';
+
+export type CommunityReportStatus = 'pending' | 'dismissed' | 'banned' | 'restricted';
+
+export type CommunityReport = {
+  id: string;
+  reason: CommunityReportReason;
+  description?: string | null;
+  status: CommunityReportStatus;
+  createdAt: string;
+  reviewedAt?: string | null;
+  postId: string;
+  postContent?: string | null;
+  postCategory: string;
+  postCreatedAt: string;
+  reportedUserId: string;
+  reportedUserName: string;
+  reportedUserEmail: string;
+  reportedUserStatus: string;
+  reporterId: string;
+  reporterName: string;
+  reporterEmail: string;
+  reviewerName?: string | null;
 };
 
 /** A borrow/trade request I have sent to another member. */

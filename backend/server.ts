@@ -46,18 +46,24 @@ async function startServer() {
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-  // ── Development CSP & Well-Known Path Fix ───────────────────────────
+  // ── CORS + CSP ──────────────────────────────────────────────────────
   app.use((req, res, next) => {
-    // Relax CSP for development to allow HMR, WebSockets, and local API calls
+    const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
+    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+      res.status(204).end();
+      return;
+    }
+
     res.setHeader("Content-Security-Policy", "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;");
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
-    
-    // Log API requests for debugging
+
     if (req.path.startsWith('/api/')) {
       console.log(`[API] ${req.method} ${req.originalUrl}`);
     }
 
-    // Handle Chrome DevTools noise silently
     if (req.path.includes('com.chrome.devtools.json')) {
       return res.status(200).json({});
     }
@@ -129,10 +135,14 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), "frontend", "dist");
-    app.use(express.static(distPath));
-    app.get("*", (_req, res) =>
-      res.sendFile(path.join(distPath, "index.html")),
-    );
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (_req, res) =>
+        res.sendFile(path.join(distPath, "index.html")),
+      );
+    } else {
+      console.log("[server] No frontend/dist found — serving API only (frontend hosted separately).");
+    }
   }
 
   httpServer.listen(PORT, "0.0.0.0", () => {

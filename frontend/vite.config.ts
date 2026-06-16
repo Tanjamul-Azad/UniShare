@@ -3,10 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-export default defineConfig(({ command }) => {
-  const isServe = command === 'serve';
+export default defineConfig(({ command: _command }) => {
   return {
-    base: isServe ? '/' : '/UniShare/',
+    base: '/',
     root: __dirname,
     server: {
       port: 5173,
@@ -21,7 +20,7 @@ export default defineConfig(({ command }) => {
           ws: true,
           changeOrigin: true,
         },
-      }
+      },
     },
     plugins: [react(), tailwindcss()],
     test: {

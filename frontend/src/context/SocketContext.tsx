@@ -88,7 +88,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
 
     const token = localStorage.getItem("unishare_access_token");
-    const newSocket = io({ auth: { token } });
+    // In production the frontend and backend live on different domains.
+    // VITE_SOCKET_URL should be the Railway backend root (no /api suffix).
+    const socketUrl = import.meta.env.VITE_SOCKET_URL as string | undefined;
+    const newSocket = socketUrl ? io(socketUrl, { auth: { token } }) : io({ auth: { token } });
     setSocket(newSocket);
 
     newSocket.on(

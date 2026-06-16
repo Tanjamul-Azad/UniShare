@@ -385,7 +385,7 @@ export default function Marketplace() {
             >
               <Link
                 to={`/marketplace/${item.id}`}
-                className="group cursor-pointer flex flex-col h-full bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+                className="group cursor-pointer flex flex-col h-full bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] hover:border-indigo-200 hover:-translate-y-1.5 transition-all duration-300"
               >
                 <div className="aspect-4/3 rounded-xl overflow-hidden bg-gray-50 mb-4 relative">
                   <div className="absolute inset-0 bg-gray-900/5 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />

@@ -62,10 +62,10 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <BookOpen className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:-rotate-6 group-hover:shadow-md transition-all duration-300 ease-out">
+              <BookOpen className="w-4 h-4 text-white transition-transform duration-300 group-hover:rotate-6" />
             </div>
-            <span className="font-bold text-lg tracking-tight text-gray-900">UniShare</span>
+            <span className="font-bold text-lg tracking-tight text-gray-900 group-hover:text-indigo-600 transition-colors">UniShare</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -79,10 +79,10 @@ export default function Layout() {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150',
+                    'px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95',
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-300/50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:-translate-y-0.5'
                   )}
                 >
                   {item.label}
@@ -116,7 +116,7 @@ export default function Layout() {
                 {/* Inbox */}
                 <Link
                   to="/inbox"
-                  className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                  className="relative p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
                   title="Inbox"
                 >
                   <MessageSquare className="w-5 h-5" />
@@ -128,10 +128,10 @@ export default function Layout() {
                 </Link>
                 <NotificationsDropdown />
                 {!isAdmin && (
-                  <Link to="/cart" className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors" title="Cart">
+                  <Link to="/cart" className="relative p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all duration-200 hover:scale-110 active:scale-95" title="Cart">
                     <ShoppingCart className="w-5 h-5" />
                     {cartItems.length > 0 && (
-                      <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-emerald-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-scale-in">
                         {cartItems.length > 9 ? '9+' : cartItems.length}
                       </span>
                     )}
@@ -140,7 +140,7 @@ export default function Layout() {
                 {user.role === 'admin' && (
                   <Link
                     to="/admin"
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full transition-colors"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-purple-200 active:scale-95"
                     title="Admin Portal"
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
@@ -153,13 +153,13 @@ export default function Layout() {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-3.5 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
+                  className="px-3.5 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-all rounded-full hover:bg-gray-100 hover:-translate-y-0.5 active:scale-95"
                 >
                   Log in
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-3.5 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-full hover:bg-indigo-700 transition-all shadow-sm hover:shadow"
+                  className="px-3.5 py-1.5 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white text-sm font-semibold rounded-full hover:shadow-lg hover:shadow-indigo-300/50 transition-all shadow-sm hover:-translate-y-0.5 active:scale-95"
                 >
                   Sign up
                 </Link>

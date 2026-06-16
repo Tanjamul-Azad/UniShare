@@ -30,7 +30,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Brand */}
       <div className="px-5 pt-6 pb-4 border-b border-gray-50">
         <Link to="/admin" className="flex items-center gap-2.5 group" onClick={onClose}>
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:shadow-md group-hover:shadow-indigo-300/50 transition-all duration-300">
             <ShieldCheck className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -42,7 +42,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Admin Profile */}
       <div
-        className="mx-3 mt-4 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-100 transition-colors"
+        className="group mx-3 mt-4 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-100 hover:border-indigo-200 hover:shadow-sm transition-all"
         onClick={() => { navigate("/profile"); onClose?.(); }}
       >
         <div className="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center shrink-0 overflow-hidden">
@@ -56,7 +56,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           <p className="text-sm font-semibold text-gray-900 leading-tight truncate">{user?.name || "Admin"}</p>
           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
         </div>
-        <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+        <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-indigo-500" />
       </div>
 
       {/* Nav */}
@@ -69,16 +69,16 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             end={link.exact}
             onClick={onClose}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              `nav-item group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200/50"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "nav-item-active bg-indigo-600 text-white shadow-md shadow-indigo-200/50"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:translate-x-1"
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <link.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400 group-hover:text-indigo-600"}`} />
+                <link.icon className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-white" : "text-gray-400 group-hover:text-indigo-600"}`} />
                 {link.label}
               </>
             )}
@@ -90,9 +90,9 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="px-3 pb-5 pt-2 border-t border-gray-100 space-y-1 mt-auto">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+          className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all hover:translate-x-1"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
           Sign Out
         </button>
       </div>

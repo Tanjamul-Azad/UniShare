@@ -208,10 +208,10 @@ export default function DashboardLayout() {
             to={link.to}
             end={link.exact}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              `nav-item group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "nav-item-active bg-indigo-600 text-white shadow-sm shadow-indigo-200"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:translate-x-1"
               }`
             }
             onClick={() => setSidebarOpen(false)}
@@ -219,7 +219,7 @@ export default function DashboardLayout() {
             {({ isActive }) => (
               <>
                 <link.icon
-                  className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-700"}`}
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-white" : "text-gray-400 group-hover:text-indigo-600"}`}
                 />
                 <span className="flex-1">{link.label}</span>
                 {"badge" in link && link.badge !== undefined && link.badge > 0 && (
@@ -245,10 +245,10 @@ export default function DashboardLayout() {
             to={link.to}
             end={false}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              `nav-item group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "nav-item-active bg-indigo-600 text-white shadow-sm shadow-indigo-200"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:translate-x-1"
               }`
             }
             onClick={() => setSidebarOpen(false)}
@@ -256,7 +256,7 @@ export default function DashboardLayout() {
             {({ isActive }) => (
               <>
                 <link.icon
-                  className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-gray-400 group-hover:text-gray-700"}`}
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-white" : "text-gray-400 group-hover:text-indigo-600"}`}
                 />
                 <span className="flex-1">{link.label}</span>
                 {link.badge !== undefined && link.badge > 0 && (
@@ -280,9 +280,9 @@ export default function DashboardLayout() {
       <div className="px-3 pb-6 pt-2 border-t border-gray-100 mt-2">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+          className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all hover:translate-x-1"
         >
-          <LogOut className="w-4 h-4 shrink-0" />
+          <LogOut className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
           Sign out
         </button>
       </div>

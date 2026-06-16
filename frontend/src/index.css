@@ -55,6 +55,7 @@ body {
 
 /* ── Shared Button Base ────────────────────────────────────── */
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -62,19 +63,47 @@ body {
   font-weight: 600;
   font-size: 0.875rem;
   border-radius: 0.75rem;
-  transition: all 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease, background-color 0.2s ease,
+              border-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
   white-space: nowrap;
   border: none;
   outline: none;
   text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Sheen sweep — runs across solid buttons on hover */
+.btn-primary::before,
+.btn-admin::before,
+.btn-danger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.28) 50%, transparent 75%);
+  background-size: 220% 100%;
+  background-position: 200% 0;
+  transition: background-position 0.6s ease;
+  pointer-events: none;
+}
+.btn-primary:hover:not(:disabled)::before,
+.btn-admin:hover:not(:disabled)::before,
+.btn-danger:hover:not(:disabled)::before {
+  background-position: -120% 0;
 }
 .btn:focus-visible {
   outline: 2px solid transparent;
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary);
 }
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
+}
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -86,17 +115,13 @@ body {
 
 /* Variants */
 .btn-primary {
-  background-color: var(--color-primary);
+  background-image: linear-gradient(135deg, #6366f1 0%, var(--color-primary) 55%, #4338ca 100%);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(79,70,229,0.3);
+  box-shadow: 0 1px 2px rgba(79,70,229,0.25), 0 2px 6px rgba(79,70,229,0.22);
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  box-shadow: 0 4px 12px rgba(79,70,229,0.35);
-  transform: translateY(-1px);
-}
-.btn-primary:focus-visible {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary);
+  box-shadow: 0 4px 10px rgba(79,70,229,0.32), 0 10px 24px rgba(79,70,229,0.28);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -105,8 +130,10 @@ body {
   border: 1px solid #e5e7eb;
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: #e5e7eb;
-  transform: translateY(-1px);
+  background-color: #e9ebef;
+  border-color: #d8dbe0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
 }
 
 .btn-ghost {
@@ -119,23 +146,23 @@ body {
 }
 
 .btn-danger {
-  background-color: var(--color-danger);
+  background-image: linear-gradient(135deg, #f87171 0%, var(--color-danger) 55%, #dc2626 100%);
   color: #fff;
+  box-shadow: 0 1px 2px rgba(239,68,68,0.25), 0 2px 6px rgba(239,68,68,0.2);
 }
 .btn-danger:hover:not(:disabled) {
-  background-color: var(--color-danger-hover);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(239,68,68,0.32), 0 10px 24px rgba(239,68,68,0.25);
+  transform: translateY(-2px);
 }
 
 .btn-admin {
-  background-color: var(--color-admin);
+  background-image: linear-gradient(135deg, #6366f1 0%, var(--color-admin) 55%, #4338ca 100%);
   color: #fff;
-  box-shadow: 0 1px 3px rgba(79,70,229,0.3);
+  box-shadow: 0 1px 2px rgba(79,70,229,0.25), 0 2px 6px rgba(79,70,229,0.22);
 }
 .btn-admin:hover:not(:disabled) {
-  background-color: var(--color-admin-hover);
-  box-shadow: 0 4px 12px rgba(79,70,229,0.35);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79,70,229,0.32), 0 10px 24px rgba(79,70,229,0.28);
+  transform: translateY(-2px);
 }
 .btn-admin:focus-visible {
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-admin);
@@ -149,6 +176,29 @@ body {
 .btn-outline:hover:not(:disabled) {
   background-color: #f9fafb;
   border-color: #9ca3af;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+}
+
+/* ── Inline CTA elevation ───────────────────────────────────────
+   Pages use inline Tailwind for their primary buttons (e.g.
+   `bg-indigo-600 hover:bg-indigo-700`). These rules give every such
+   solid CTA a consistent premium lift + tactile press, app-wide,
+   without touching each call site. Scoped to <a>/<button> only. */
+a:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black),
+button:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black) {
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.22s ease,
+              transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+a:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black):hover:not(:disabled):not([aria-disabled="true"]),
+button:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black):hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
+}
+a:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black):active:not(:disabled):not([aria-disabled="true"]),
+button:where(.hover\:bg-indigo-700, .hover\:bg-gray-800, .hover\:bg-gray-900, .hover\:bg-emerald-700, .hover\:bg-rose-600, .hover\:bg-black):active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
 }
 
 /* ── Back Button ────────────────────────────────────────────── */
@@ -164,13 +214,18 @@ body {
   cursor: pointer;
   padding: 0.375rem 0.625rem;
   border-radius: 0.625rem;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
   text-decoration: none;
 }
 .back-btn:hover {
   color: #111827;
   background-color: #f3f4f6;
-  transform: translateX(-2px);
+}
+.back-btn:hover svg {
+  transform: translateX(-3px);
+}
+.back-btn svg {
+  transition: transform 0.18s ease;
 }
 
 /* ── Card ───────────────────────────────────────────────────── */
@@ -179,12 +234,122 @@ body {
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
   overflow: hidden;
 }
 .card-hover:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 14px 38px rgba(15,23,42,0.12);
+  border-color: #e0e2e7;
+  transform: translateY(-4px);
+}
+/* Image zoom helper — add `.zoom-img` to an <img> inside a `group`/`.card-hover` */
+.zoom-img {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.card-hover:hover .zoom-img,
+.group:hover .zoom-img {
+  transform: scale(1.06);
+}
+
+/* ── Generic hover utilities ────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
   transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15,23,42,0.1);
+}
+
+/* Animated underline for inline links / nav items */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Sidebar nav active indicator bar */
+.nav-item {
+  position: relative;
+}
+.nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-primary);
+  transform: translateY(-50%);
+  transition: height 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-item:hover::before {
+  height: 45%;
+}
+.nav-item-active::before {
+  height: 65%;
+  background: #fff;
+}
+
+/* ── Entrance animations ────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in    { animation: fade-in 0.5s ease both; }
+.animate-scale-in   { animation: scale-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-float      { animation: float-soft 4s ease-in-out infinite; }
+
+/* Stagger helpers — pair with .animate-fade-in-up on children */
+.stagger > *  { animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.16s; }
+.stagger > *:nth-child(4) { animation-delay: 0.22s; }
+.stagger > *:nth-child(5) { animation-delay: 0.28s; }
+.stagger > *:nth-child(6) { animation-delay: 0.34s; }
+.stagger > *:nth-child(7) { animation-delay: 0.40s; }
+.stagger > *:nth-child(8) { animation-delay: 0.46s; }
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Page Section ───────────────────────────────────────────── */
